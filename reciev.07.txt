@@ -1,0 +1,60 @@
+Configuration	reciev.07
+STM32CubeMX 	4.22.0
+Date	11/24/2017
+MCU	STM32L011D4Px
+
+
+
+PERIPHERALS	MODES	FUNCTIONS	PINS
+ADC	IN4	ADC_IN4	PA4
+RCC	BYPASS Clock Source	RCC_CK_IN	PA0-CK_IN
+SYS	Serial_Wire	SYS_SWCLK	PA14
+SYS	Serial_Wire	SYS_SWDIO	PA13
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+TIM2	Internal Clock	TIM2_VS_ClockSourceINT	VP_TIM2_VS_ClockSourceINT
+TIM2	PWM Generation CH2	TIM2_CH2	PA1
+TIM21	Internal Clock	TIM21_VS_ClockSourceINT	VP_TIM21_VS_ClockSourceINT
+USART2	Asynchronous	USART2_RX	PA10
+USART2	Asynchronous	USART2_TX	PA9
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+2	PC14-OSC32_IN	GPIO_Output	HPT_Answer_OUT
+3	PC15-OSC32_OUT	GPIO_Output	Interrupt_OUT2
+5	PA0-CK_IN	RCC_CK_IN	
+6	PA1	TIM2_CH2	CAPLAMP_OUT1
+7	PA4	ADC_IN4	signal_IN
+8	PA7	GPIO_EXTI7	External_IN
+11	PA9	USART2_TX	
+12	PA10	USART2_RX	
+13	PA13	SYS_SWDIO	
+14	PA14	SYS_SWCLK	
+
+
+
+SOFTWARE PROJECT
+
+Project Settings : 
+Project Name : reciev.07
+Project Folder : C:\Users\KAArtemev\Desktop\Прошивки\Приемник\reciev.07
+Toolchain / IDE : MDK-ARM V5
+Firmware Package Name and Version : STM32Cube FW_L0 V1.7.0
+
+
+Code Generation Settings : 
+STM32Cube Firmware Library Package : Copy all used libraries into the project folder
+Generate peripheral initialization as a pair of '.c/.h' files per peripheral : Yes
+Backup previously generated files when re-generating : Yes
+Delete previously generated files when not re-generated : Yes
+Set all free pins as analog (to optimize the power consumption) : Yes
+
+
+Toolchains Settings : 
+Compiler Optimizations : Balanced Size/Speed
+
+
+
+
+
+
