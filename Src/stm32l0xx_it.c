@@ -36,7 +36,65 @@
 #include "stm32l0xx_it.h"
 
 /* USER CODE BEGIN 0 */
+#include "match_dsp.h"
+#include "math.h"
+#include <string.h>
 
+#define	N	16
+
+// для 8 битного номера
+
+
+#define ALERT_H 43690	
+#define ALERT_L 21845
+#define REBOOT	0
+
+extern uint32_t buff1;	// буфер
+
+static float retf11,retf12,retf21,retf22,retfl, buff0, buffl0;	// фильтры
+
+uint16_t  tmptime = 0;
+
+
+static uint8_t  bin8[2], numbit = 0;
+
+static uint16_t j, crc, bin;
+extern uint16_t name;
+
+
+uint16_t bit_1 = 0;
+uint16_t bit_0 = 0;
+uint16_t bit_n = 0;
+uint16_t binn;
+
+extern uint8_t blink_type;
+extern uint16_t blink_ext;
+uint16_t blink_cnt = 0;
+extern uint8_t  blink_8sec;
+
+float max;
+float min;
+
+
+_Bool frame = 0;
+_Bool pass = 0;
+_Bool det = 0;
+_Bool numb[N];
+_Bool numbn[N];
+extern _Bool blink_trg;
+
+float tst = 0.0f;
+
+static uint8_t  nop = 0;
+
+
+
+
+extern _Bool trg_pin;
+
+extern float history11[], history12[], history21[], history22[], historyl[];
+extern SettingParametrs_t SETUP;
+extern Cmd_Type CMD;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -192,7 +250,194 @@ void TIM2_IRQHandler(void)
 void TIM21_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM21_IRQn 0 */
+if(blink_cnt>0)
+		blink_cnt++;
+	if((blink_cnt>25600))
+	{
+		blink_cnt = 1;
+		blink_8sec++;
+		if(blink_8sec <= 4)
+		{
+			blink(blink_type);
+		}
+		else
+		{
+			blink_8sec = 0;
+			blink_cnt = 0;
+		}
+	}
+	
+	if(!blink_trg)
+	{
+		if((blink_ext < 3200))
+			blink_ext++;
+		if(blink_ext == 3200)
+			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+	}
+	
 
+	//buff00 = 0;	
+	//for(n = 0; n < 1; n++)
+	//	{
+	//		buff00+=(((float)buff1[n])/1);
+	//	}
+	//buff00 = (float)buff1;
+	buff0 = 3*((float)buff1)/65520; //65535;							// ?????? ? ?????? 
+	
+	
+	// cheby 2
+	retf11 = iir_test(buff0,SETUP.cf1s1,history11);			//f1
+		retf12 = iir_test(retf11,SETUP.cf1s2,history12);
+	
+	retf21 = iir_test(buff0,SETUP.cf2s1,history21);			//f2
+		retf22 = iir_test(retf21,SETUP.cf2s2,history22);
+	
+		buffl0 = fabsf(retf12)-fabsf(retf22);
+		retfl  = iir_test(buffl0,SETUP.cflp,historyl);
+	
+
+		switch(CMD)
+		{
+			case START_DATA_TRANSMIT_FLP:
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retfl,sizeof(retfl));
+			break;
+			case START_DATA_TRANSMIT_F1:
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retf12,sizeof(retf12));
+			break;
+			case START_DATA_TRANSMIT_F2:
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retf22,sizeof(retf22));
+			break;
+			case START_DATA_TRANSMIT_IN:
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&buff0,sizeof(buff0));
+			break;
+			default:
+				break;
+		}
+		
+		
+	if(!det)
+  {
+		if ((retfl >= SETUP.ratio)||(retfl <= -SETUP.ratio))
+			{
+				j=0;
+        det=1;
+				max = 0;
+				min = 0;
+      }
+  }
+  else
+	{
+		if(j < SETUP.samplenum)
+    {
+			if(retfl >= SETUP.ratio)
+			{	bit_1++; tst = 1;	}
+			if(retfl <= -SETUP.ratio)
+			{	bit_0++; tst = -1; }
+			if((retfl < SETUP.ratio)&&(retfl > -SETUP.ratio))
+			{	bit_n++; tst = 0;	}
+			
+    }
+    if(j == SETUP.samplenum)
+		{
+			if(numbit < N)
+			{	
+				if((bit_1 > bit_0)&&(bit_1 > bit_n)&&(bit_1 > (SETUP.samplenum/2)))
+					{
+						bin = bin<<1;
+						bin = bin|1;
+						numb[numbit] = 1;
+						numbit++;
+						crc = crc_calculating((uint8_t *)&bin,1);
+						//HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
+					}
+				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))
+					{
+						bin = bin<<1;
+						bin = bin|0;
+						numb[numbit] = 0;
+						numbit++;
+//						HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
+					}
+				if((bit_n > bit_0)&&(bit_n > bit_1))
+					{
+						nop++;
+						if((nop <= 0)&&(bit_n > (SETUP.samplenum/2)))
+							{
+								//bin = bin<<1;
+								//bin = bin|0;
+								numb[numbit] = 0;
+								numbit++;
+//								HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
+								
+							}
+						else
+							{
+								bit_1 = 0;
+								bit_0 = 0;
+								bit_n = 0;
+								nop = 0;
+								det=0;
+								j=0;
+								bin=0;
+								numbit = 0;
+								memset(numb,0,sizeof(numb));
+							}
+						
+				}
+					
+					
+			}
+			
+			bit_1 = 0;
+			bit_0 = 0;
+			bit_n = 0;
+			j=0;
+			
+		}
+  }
+  j++;
+	
+	if( numbit == N )
+	{
+		
+		bin8[0] = bin >> 8;
+		bin8[1] = bin;
+		//crc = crc_calculating((uint8_t *)bin8,2);
+		binn = bin;
+
+	/*	
+		if(bin == name)
+			txDATA.det = 1;
+		else
+			txDATA.det = 0;
+		
+		ret[0] = txDATA.det;
+		ret[1] = 0;
+		ret[2] = bin8[0];
+		ret[3] = bin8[1];
+				
+		
+		txDATA.name = bin;
+		txDATA.crc = crc;
+		
+*/	//HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&bin,sizeof(bin));
+		if(bin == SETUP.name)
+		{
+			blink_cnt = 1;
+			blink(PERSONAL);
+		}
+		if((bin == ALERT_H)||(bin == ALERT_L))
+		{
+			blink_cnt = 1;
+			blink(ALARM);
+		}
+		/*if(bin == REBOOT)
+			SCB->AIRCR = 0x05FA0004;*/
+		
+		det=0;
+		bin=0;
+		numbit = 0;
+	}
   /* USER CODE END TIM21_IRQn 0 */
   HAL_TIM_IRQHandler(&htim21);
   /* USER CODE BEGIN TIM21_IRQn 1 */

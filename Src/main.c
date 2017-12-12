@@ -47,14 +47,24 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
+#define ADR_START 0x08080000
+#include "stm32l0xx_it.h"
 
+#include	"match_dsp.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+extern UART2Recv_t UART2_RecvType;
+extern SettingParametrs_t SETUP;
+extern Cmd_Type CMD;
+uint32_t  buff1;
+extern uint8_t blink_cnt;
 
+extern UART_HandleTypeDef huart2;
+extern DMA_HandleTypeDef hdma_tim2_ch1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,7 +113,32 @@ int main(void)
   MX_IWDG_Init();
 
   /* USER CODE BEGIN 2 */
+	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);	
+	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 
+	
+	if(*(__IO uint32_t*)(ADR_START) == 0x00000000)
+		DefaultSettings();
+	else
+		LoadSetting(&SETUP);
+	
+
+	//SaveSetting(&SETUP);
+	
+	UART2_RecvType = UART2_RECV_CMD;
+	HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
+
+	HAL_ADCEx_Calibration_Start(&hadc,1);		// калибровка ацп
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);			// запуск ацп пдп
+	
+	
+	
+
+	blink(START);
+
+
+	
+	HAL_TIM_Base_Start_IT(&htim21);					//запуск таймера
   /* USER CODE END 2 */
 
   /* Infinite loop */
