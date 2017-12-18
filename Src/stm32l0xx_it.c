@@ -58,7 +58,7 @@ uint16_t  tmptime = 0;
 
 static uint8_t numbit = 0;
 
-static uint16_t j, bin;
+static uint16_t j, bin, binx;
 extern uint16_t name;
 
 
@@ -359,6 +359,7 @@ if(blink_cnt>0)
 					{
 						bin = bin<<1;
 						bin = bin|1;
+						binx = dataBuff(1);
 						numb[numbit] = 1;
 						numbit++;
 //						crc = crc_calculating((uint8_t *)&bin,1);
@@ -368,6 +369,7 @@ if(blink_cnt>0)
 					{
 						bin = bin<<1;
 						bin = bin|0;
+						binx = dataBuff(0);
 						numb[numbit] = 0;
 						numbit++;
 //						HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
@@ -379,7 +381,8 @@ if(blink_cnt>0)
 							{
 								//bin = bin<<1;
 								//bin = bin|0;
-								numb[numbit] = 0;
+								//numb[numbit] = 0;
+								binx = dataBuff(0);
 								numbit++;
 //								HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
 								

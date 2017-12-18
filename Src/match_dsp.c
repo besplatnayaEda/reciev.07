@@ -55,7 +55,8 @@
 
 float history11[] = {0,0},history12[] = {0,0},history21[] = {0,0},history22[] = {0,0},historyl[] = {0,0};
 
-
+#define DATALEN	16
+uint8_t databuff[DATALEN];
 													//			a1					a2					b0					b1						b2
 
 
@@ -157,6 +158,31 @@ float IIR_SOS(float in, float *coef, float *his)
 }
 
 
+// сейчас передача идет старшим вперед databuff[0] - старший
+	// должна быть младшим вперед databuff[0] - младший
+	uint16_t dataBuff(uint8_t data)
+	{
+		uint16_t databin;
+		
+		// кольцевой сдвиг
+		for(uint8_t i = DATALEN-1; i > 0; i--)
+		{
+			databuff[i] = databuff[i-1];
+		}
+		// запись нового бита
+		databuff[0] = data;
+		
+		// восстановление числа
+		
+		for(uint8_t i = 0; i < DATALEN; i++)
+		{
+			databin = databin<<1;
+			databin = databin|databuff[i];
+		}
+		
+		return databin;
+	}
+	
 //unsigned int crc_calculating(unsigned char *puchMsg, unsigned short usDataLen)
 //{
 //        unsigned char uchCRCHi = 0xFF ;             /* Инициализация последнего байта CRC  */
