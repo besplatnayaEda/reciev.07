@@ -56,6 +56,7 @@
 #define signal_IN_GPIO_Port GPIOA
 #define External_IN_Pin GPIO_PIN_7
 #define External_IN_GPIO_Port GPIOA
+#define External_IN_EXTI_IRQn EXTI4_15_IRQn
 
 /* USER CODE BEGIN Private defines */
 

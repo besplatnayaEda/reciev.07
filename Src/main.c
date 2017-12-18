@@ -109,13 +109,17 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM21_Init();
   MX_USART2_UART_Init();
-  MX_CRC_Init();
-  MX_IWDG_Init();
+//  MX_CRC_Init();
+//  MX_IWDG_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);	
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 
+#ifdef DFS
+	DefaultSettings();
+	SaveSetting(&SETUP);
+#endif
 	
 	if(*(__IO uint32_t*)(ADR_START) == 0x00000000)
 		DefaultSettings();

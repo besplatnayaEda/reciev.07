@@ -56,9 +56,9 @@ static float retf11,retf12,retf21,retf22,retfl, buff0, buffl0;	// фильтры
 uint16_t  tmptime = 0;
 
 
-static uint8_t  bin8[2], numbit = 0;
+static uint8_t numbit = 0;
 
-static uint16_t j, crc, bin;
+static uint16_t j, bin;
 extern uint16_t name;
 
 
@@ -188,6 +188,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+* @brief This function handles EXTI line 4 to 15 interrupts.
+*/
+void EXTI4_15_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_15_IRQn 0 */
+
+  /* USER CODE END EXTI4_15_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
+  /* USER CODE BEGIN EXTI4_15_IRQn 1 */
+
+  /* USER CODE END EXTI4_15_IRQn 1 */
+}
+
+/**
 * @brief This function handles DMA1 channel 1 interrupt.
 */
 void DMA1_Channel1_IRQHandler(void)
@@ -286,28 +300,28 @@ if(blink_cnt>0)
 	
 	
 	// cheby 2
-	retf11 = iir_test(buff0,SETUP.cf1s1,history11);			//f1
-		retf12 = iir_test(retf11,SETUP.cf1s2,history12);
+	retf11 = IIR_SOS(buff0,SETUP.cf1s1,history11);			//f1
+		retf12 = IIR_SOS(retf11,SETUP.cf1s2,history12);
 	
-	retf21 = iir_test(buff0,SETUP.cf2s1,history21);			//f2
-		retf22 = iir_test(retf21,SETUP.cf2s2,history22);
+	retf21 = IIR_SOS(buff0,SETUP.cf2s1,history21);			//f2
+		retf22 = IIR_SOS(retf21,SETUP.cf2s2,history22);
 	
 		buffl0 = fabsf(retf12)-fabsf(retf22);
-		retfl  = iir_test(buffl0,SETUP.cflp,historyl);
+		retfl  = IIR_SOS(buffl0,SETUP.cflp,historyl);
 	
 
 		switch(CMD)
 		{
-			case START_DATA_TRANSMIT_FLP:
+			case START_DTR_FLP:
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retfl,sizeof(retfl));
 			break;
-			case START_DATA_TRANSMIT_F1:
+			case START_DTR_F1:
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retf12,sizeof(retf12));
 			break;
-			case START_DATA_TRANSMIT_F2:
+			case START_DTR_F2:
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retf22,sizeof(retf22));
 			break;
-			case START_DATA_TRANSMIT_IN:
+			case START_DTR_IN:
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&buff0,sizeof(buff0));
 			break;
 			default:
@@ -347,7 +361,7 @@ if(blink_cnt>0)
 						bin = bin|1;
 						numb[numbit] = 1;
 						numbit++;
-						crc = crc_calculating((uint8_t *)&bin,1);
+//						crc = crc_calculating((uint8_t *)&bin,1);
 						//HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
 					}
 				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))
@@ -400,9 +414,7 @@ if(blink_cnt>0)
 	if( numbit == N )
 	{
 		
-		bin8[0] = bin >> 8;
-		bin8[1] = bin;
-		//crc = crc_calculating((uint8_t *)bin8,2);
+		
 		binn = bin;
 
 	/*	
@@ -421,7 +433,7 @@ if(blink_cnt>0)
 		txDATA.crc = crc;
 		
 */	//HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&bin,sizeof(bin));
-		if(bin == SETUP.name)
+		if(bin == SETUP.hpt_name)
 		{
 			blink_cnt = 1;
 			blink(PERSONAL);
