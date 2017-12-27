@@ -95,11 +95,13 @@ extern _Bool trg_pin;
 extern float history11[], history12[], history21[], history22[], historyl[];
 extern SettingParametrs_t SETUP;
 extern Cmd_Type CMD;
+extern UART2_Queue_Data UART2_Trans_Data;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc;
-extern ADC_HandleTypeDef hadc;
+extern LPTIM_HandleTypeDef hlptim1;
+extern DMA_HandleTypeDef hdma_tim2_ch2;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim21;
 extern DMA_HandleTypeDef hdma_usart2_tx;
@@ -109,61 +111,6 @@ extern UART_HandleTypeDef huart2;
 /******************************************************************************/
 /*            Cortex-M0+ Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
-
-/**
-* @brief This function handles Non maskable interrupt.
-*/
-void NMI_Handler(void)
-{
-  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-
-  /* USER CODE END NonMaskableInt_IRQn 0 */
-  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-
-  /* USER CODE END NonMaskableInt_IRQn 1 */
-}
-
-/**
-* @brief This function handles Hard fault interrupt.
-*/
-void HardFault_Handler(void)
-{
-  /* USER CODE BEGIN HardFault_IRQn 0 */
-
-  /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-  }
-  /* USER CODE BEGIN HardFault_IRQn 1 */
-
-  /* USER CODE END HardFault_IRQn 1 */
-}
-
-/**
-* @brief This function handles System service call via SWI instruction.
-*/
-void SVC_Handler(void)
-{
-  /* USER CODE BEGIN SVC_IRQn 0 */
-
-  /* USER CODE END SVC_IRQn 0 */
-  /* USER CODE BEGIN SVC_IRQn 1 */
-
-  /* USER CODE END SVC_IRQn 1 */
-}
-
-/**
-* @brief This function handles Pendable request for system service.
-*/
-void PendSV_Handler(void)
-{
-  /* USER CODE BEGIN PendSV_IRQn 0 */
-
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
-
-  /* USER CODE END PendSV_IRQn 1 */
-}
 
 /**
 * @brief This function handles System tick timer.
@@ -224,24 +171,38 @@ void DMA1_Channel2_3_IRQHandler(void)
 
   /* USER CODE END DMA1_Channel2_3_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart2_tx);
-  HAL_DMA_IRQHandler(&hdma_usart2_rx);
+  HAL_DMA_IRQHandler(&hdma_tim2_ch2);
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
 
   /* USER CODE END DMA1_Channel2_3_IRQn 1 */
 }
 
 /**
-* @brief This function handles ADC1, COMP1 and COMP2 interrupts (COMP interrupts through EXTI lines 21 and 22).
+* @brief This function handles DMA1 channel 4, channel 5, channel 6 and channel 7 interrupts.
 */
-void ADC1_COMP_IRQHandler(void)
+void DMA1_Channel4_5_6_7_IRQHandler(void)
 {
-  /* USER CODE BEGIN ADC1_COMP_IRQn 0 */
+  /* USER CODE BEGIN DMA1_Channel4_5_6_7_IRQn 0 */
 
-  /* USER CODE END ADC1_COMP_IRQn 0 */
-  HAL_ADC_IRQHandler(&hadc);
-  /* USER CODE BEGIN ADC1_COMP_IRQn 1 */
+  /* USER CODE END DMA1_Channel4_5_6_7_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart2_rx);
+  /* USER CODE BEGIN DMA1_Channel4_5_6_7_IRQn 1 */
 
-  /* USER CODE END ADC1_COMP_IRQn 1 */
+  /* USER CODE END DMA1_Channel4_5_6_7_IRQn 1 */
+}
+
+/**
+* @brief This function handles LPTIM1 global interrupt / LPTIM1 wake-up interrupt through EXTI line 29.
+*/
+void LPTIM1_IRQHandler(void)
+{
+  /* USER CODE BEGIN LPTIM1_IRQn 0 */
+
+  /* USER CODE END LPTIM1_IRQn 0 */
+  HAL_LPTIM_IRQHandler(&hlptim1);
+  /* USER CODE BEGIN LPTIM1_IRQn 1 */
+
+  /* USER CODE END LPTIM1_IRQn 1 */
 }
 
 /**
@@ -309,7 +270,33 @@ if(blink_cnt>0)
 		buffl0 = fabsf(retf12)-fabsf(retf22);
 		retfl  = IIR_SOS(buffl0,SETUP.cflp,historyl);
 	
-
+#ifdef DEBUG
+		switch(CMD)
+		{
+			case START_DTR_FLP:
+				UART2_Trans_Data.cmd = SEND_DTR_FLP;
+				UART2_Trans_Data.value.f = retfl;
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
+			break;
+			case START_DTR_F1:
+				UART2_Trans_Data.cmd = SEND_DTR_F1;
+				UART2_Trans_Data.value.f = retf12;
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
+			break;
+			case START_DTR_F2:
+				UART2_Trans_Data.cmd = SEND_DTR_F2;
+				UART2_Trans_Data.value.f = retf22;
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
+			break;
+			case START_DTR_IN:
+				UART2_Trans_Data.cmd = SEND_DTR_IN;
+				UART2_Trans_Data.value.f = buff0;
+				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
+			break;
+			default:
+				break;
+		}
+#else
 		switch(CMD)
 		{
 			case START_DTR_FLP:
@@ -327,7 +314,7 @@ if(blink_cnt>0)
 			default:
 				break;
 		}
-		
+#endif		
 		
 	if(!det)
   {

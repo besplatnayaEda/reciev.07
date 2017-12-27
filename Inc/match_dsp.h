@@ -57,6 +57,7 @@ typedef enum {	UNDEFINED = -1,
 				SEND_DTR_F1,									// передача данных с f1
 				SEND_DTR_F2,									// передача данных с f2
 				SEND_DTR_IN,									// передача данных с inp
+				DEF_SETT,											// сброс на заводские настройки
 				CONNECT,											// запрос подключения
 				OK,														// ответ ОК
 				ERR														// ответ ERR
@@ -87,6 +88,27 @@ typedef struct SettingParametrs {
 	float ratio;				// порог обнаружения
 	
 } SettingParametrs_t, *pSettingParametrs_t;
+
+
+typedef union {
+    uint32_t u32;
+    uint16_t u16;
+    uint8_t u8;
+    int32_t i32;
+    int16_t i16;
+    int8_t i8;
+    int i;
+    float f;
+} Queue_Object_Data_Value;
+
+#pragma pack(push, 1)
+typedef struct {
+  // команда
+  Cmd_Type cmd;
+  // данные
+  Queue_Object_Data_Value value;
+} UART2_Queue_Data;
+#pragma pack(pop)
 
 float IIR_SOS(float in, float *coef, float *his);
 unsigned int crc_calculating(unsigned char *puchMsg, unsigned short usDataLen);

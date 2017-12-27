@@ -42,6 +42,7 @@
 #include "crc.h"
 #include "dma.h"
 #include "iwdg.h"
+#include "lptim.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -111,15 +112,16 @@ int main(void)
   MX_USART2_UART_Init();
 //  MX_CRC_Init();
 //  MX_IWDG_Init();
+//  MX_LPTIM1_Init();
 
   /* USER CODE BEGIN 2 */
-	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);	
+	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);			// RESET потому что стоит ключ там 
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 
-#ifdef DFS
-	DefaultSettings();
-	SaveSetting(&SETUP);
-#endif
+//#ifdef DFS
+//	DefaultSettings();
+//	SaveSetting(&SETUP);
+//#endif
 	
 	if(*(__IO uint32_t*)(ADR_START) == 0x00000000)
 		DefaultSettings();
@@ -137,7 +139,7 @@ int main(void)
 	
 	
 	
-
+ 
 	blink(START);
 
 
@@ -202,8 +204,10 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_LPTIM1;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_PCLK;
+
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
