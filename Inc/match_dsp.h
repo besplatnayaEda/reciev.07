@@ -10,6 +10,7 @@
 #define ALARM 		1
 #define PERSONAL	2
 #define OK_SET		3
+#define TEST			4
 
 
 #define ADR_START 0x08080000
@@ -46,6 +47,7 @@ typedef enum {	UNDEFINED = -1,
 				GET_F1,												// передача частоты f1
 				GET_F2,												// передача частоты f2
 				GET_BR,												// передача бодрейта
+				GET_DET_THRES,								// передача порога обнаружения
 				GET_NAME_HPT,									// передача номера
 				GET_SN,												// получить серийный номер
 				GET_FW,												// получить версию ПО

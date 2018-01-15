@@ -58,6 +58,8 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
+
 extern UART2Recv_t UART2_RecvType;
 extern SettingParametrs_t SETUP;
 extern Cmd_Type CMD;
@@ -112,7 +114,7 @@ int main(void)
   MX_USART2_UART_Init();
 //  MX_CRC_Init();
 //  MX_IWDG_Init();
-//  MX_LPTIM1_Init();
+  MX_LPTIM1_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);			// RESET потому что стоит ключ там 

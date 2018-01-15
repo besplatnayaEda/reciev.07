@@ -47,12 +47,14 @@
 
 #define ALERT_H 43690	
 #define ALERT_L 21845
+#define TEST_H  65280
+#define TEST_L	255
 #define REBOOT	0
 
 extern uint32_t buff1;	// буфер
 
 static float retf11,retf12,retf21,retf22,retfl, buff0, buffl0;	// фильтры
-
+extern uint16_t cnt_hpt;
 uint16_t  tmptime = 0;
 
 
@@ -83,12 +85,8 @@ _Bool numb[N];
 _Bool numbn[N];
 extern _Bool blink_trg;
 
-float tst = 0.0f;
 
 static uint8_t  nop = 0;
-
-
-
 
 extern _Bool trg_pin;
 
@@ -242,6 +240,9 @@ if(blink_cnt>0)
 		}
 	}
 	
+//	if(cnt_hpt)
+//		cnt_hpt++;
+	
 	if(!blink_trg)
 	{
 		if((blink_ext < 3200))
@@ -251,12 +252,6 @@ if(blink_cnt>0)
 	}
 	
 
-	//buff00 = 0;	
-	//for(n = 0; n < 1; n++)
-	//	{
-	//		buff00+=(((float)buff1[n])/1);
-	//	}
-	//buff00 = (float)buff1;
 	buff0 = 3*((float)buff1)/65520; //65535;							// ?????? ? ?????? 
 	
 	
@@ -331,11 +326,11 @@ if(blink_cnt>0)
 		if(j < SETUP.samplenum)
     {
 			if(retfl >= SETUP.ratio)
-			{	bit_1++; tst = 1;	}
+				bit_1++;
 			if(retfl <= -SETUP.ratio)
-			{	bit_0++; tst = -1; }
+				bit_0++;
 			if((retfl < SETUP.ratio)&&(retfl > -SETUP.ratio))
-			{	bit_n++; tst = 0;	}
+				bit_n++;
 			
     }
     if(j == SETUP.samplenum)
@@ -348,9 +343,6 @@ if(blink_cnt>0)
 						bin = bin|1;
 						binx = dataBuff(1);
 						numb[numbit] = 1;
-						numbit++;
-//						crc = crc_calculating((uint8_t *)&bin,1);
-						//HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
 					}
 				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))
 					{
@@ -359,7 +351,6 @@ if(blink_cnt>0)
 						binx = dataBuff(0);
 						numb[numbit] = 0;
 						numbit++;
-//						HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
 					}
 				if((bit_n > bit_0)&&(bit_n > bit_1))
 					{
@@ -371,8 +362,6 @@ if(blink_cnt>0)
 								//numb[numbit] = 0;
 								binx = dataBuff(0);
 								numbit++;
-//								HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&numbit,sizeof(numbit));
-								
 							}
 						else
 							{
@@ -386,10 +375,8 @@ if(blink_cnt>0)
 								numbit = 0;
 								memset(numb,0,sizeof(numb));
 							}
-						
-				}
-					
-					
+					}
+			
 			}
 			
 			bit_1 = 0;
@@ -404,25 +391,8 @@ if(blink_cnt>0)
 	if( numbit == N )
 	{
 		
-		
 		binn = bin;
-
-	/*	
-		if(bin == name)
-			txDATA.det = 1;
-		else
-			txDATA.det = 0;
-		
-		ret[0] = txDATA.det;
-		ret[1] = 0;
-		ret[2] = bin8[0];
-		ret[3] = bin8[1];
-				
-		
-		txDATA.name = bin;
-		txDATA.crc = crc;
-		
-*/	//HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&bin,sizeof(bin));
+	
 		if(bin == SETUP.hpt_name)
 		{
 			blink_cnt = 1;
@@ -432,6 +402,10 @@ if(blink_cnt>0)
 		{
 			blink_cnt = 1;
 			blink(ALARM);
+		}
+		if((bin == TEST_H)||(bin == TEST_L))
+		{
+			blink(TEST);
 		}
 		/*if(bin == REBOOT)
 			SCB->AIRCR = 0x05FA0004;*/
