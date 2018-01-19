@@ -10,8 +10,16 @@
 #define ALARM 		1
 #define PERSONAL	2
 #define OK_SET		3
-#define TEST			4
 
+#define RX_READY	0
+#define RX_BUSY		1
+
+
+#define CONFIRM		39		//	195 ms
+#define REQUEST		79		//	395 ms
+#define	TEST			118		//	590 ms
+
+#define TXBUFF 4
 
 #define ADR_START 0x08080000
 
@@ -113,7 +121,7 @@ typedef struct {
 #pragma pack(pop)
 
 float IIR_SOS(float in, float *coef, float *his);
-unsigned int crc_calculating(unsigned char *puchMsg, unsigned short usDataLen);
+
 
 void blink(char mode);
 void SetCoefficiens(uint16_t freq1, uint16_t freq2, uint16_t boudrate);
@@ -121,6 +129,9 @@ void DefaultSettings(void);
 
 void SaveSetting(SettingParametrs_t *Settings);
 void LoadSetting(SettingParametrs_t *Settings);
+
+void HPT_Transmite(uint8_t type);			// ответ HPT метке
+
 
 uint16_t dataBuff(uint8_t data);
 

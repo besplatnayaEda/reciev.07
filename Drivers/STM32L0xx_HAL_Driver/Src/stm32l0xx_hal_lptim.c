@@ -1276,7 +1276,7 @@ HAL_StatusTypeDef HAL_LPTIM_Counter_Start_IT(LPTIM_HandleTypeDef *hlptim, uint32
   __HAL_LPTIM_AUTORELOAD_SET(hlptim, Period);
   
   /* Start timer in continuous mode */
-  __HAL_LPTIM_START_CONTINUOUS(hlptim);
+  __HAL_LPTIM_START_SINGLE(hlptim);
     
   /* Change the TIM state*/
   hlptim->State= HAL_LPTIM_STATE_READY;
@@ -1405,17 +1405,17 @@ uint32_t HAL_LPTIM_ReadCompare(LPTIM_HandleTypeDef *hlptim)
 void HAL_LPTIM_IRQHandler(LPTIM_HandleTypeDef *hlptim)
 {
   /* Compare match interrupt */
-  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_CMPM) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_CMPM) !=RESET)
-    {
-      /* Clear Compare match flag */
-      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_CMPM);
-      
-      /* Compare match Callback */
-      HAL_LPTIM_CompareMatchCallback(hlptim);      
-    }
-  }
+//  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_CMPM) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_CMPM) !=RESET)
+//    {
+//      /* Clear Compare match flag */
+//      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_CMPM);
+//      
+//      /* Compare match Callback */
+//      HAL_LPTIM_CompareMatchCallback(hlptim);      
+//    }
+//  }
   
   /* Autoreload match interrupt */
   if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_ARRM) != RESET)
@@ -1431,71 +1431,71 @@ void HAL_LPTIM_IRQHandler(LPTIM_HandleTypeDef *hlptim)
   }
   
   /* Trigger detected interrupt */
-  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_EXTTRIG) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_EXTTRIG) !=RESET)
-    {
-      /* Clear Trigger detected flag */
-      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_EXTTRIG);
-      
-      /* Trigger detected callback */
-      HAL_LPTIM_TriggerCallback(hlptim);      
-    }
-  }
+//  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_EXTTRIG) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_EXTTRIG) !=RESET)
+//    {
+//      /* Clear Trigger detected flag */
+//      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_EXTTRIG);
+//      
+//      /* Trigger detected callback */
+//      HAL_LPTIM_TriggerCallback(hlptim);      
+//    }
+//  }
   
   /* Compare write interrupt */
-  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_CMPOK) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_CMPOK) !=RESET)
-    {
-      /* Clear Compare write flag */
-      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_CMPOK);
-      
-      /* Compare write Callback */
-      HAL_LPTIM_CompareWriteCallback(hlptim);      
-    }
-  }
+//  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_CMPOK) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_CMPOK) !=RESET)
+//    {
+//      /* Clear Compare write flag */
+//      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_CMPOK);
+//      
+//      /* Compare write Callback */
+//      HAL_LPTIM_CompareWriteCallback(hlptim);      
+//    }
+//  }
   
   /* Autoreload write interrupt */
-  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_ARROK) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_ARROK) !=RESET)
-    {
-      /* Clear Autoreload write flag */
-      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_ARROK);
-      
-      /* Autoreload write Callback */
-      HAL_LPTIM_AutoReloadWriteCallback(hlptim);      
-    }
-  }
+//  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_ARROK) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_ARROK) !=RESET)
+//    {
+//      /* Clear Autoreload write flag */
+//      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_ARROK);
+//      
+//      /* Autoreload write Callback */
+//      HAL_LPTIM_AutoReloadWriteCallback(hlptim);      
+//    }
+//  }
   
   /* Direction counter changed from Down to Up interrupt */
-  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_UP) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_UP) !=RESET)
-    {
-      /* Clear Direction counter changed from Down to Up flag */
-      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_UP);
-      
-      /* Direction counter changed from Down to Up Callback */
-      HAL_LPTIM_DirectionUpCallback(hlptim);      
-    }
-  }
+//  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_UP) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_UP) !=RESET)
+//    {
+//      /* Clear Direction counter changed from Down to Up flag */
+//      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_UP);
+//      
+//      /* Direction counter changed from Down to Up Callback */
+//      HAL_LPTIM_DirectionUpCallback(hlptim);      
+//    }
+//  }
   
   /* Direction counter changed from Up to Down interrupt */
-  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_DOWN) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_DOWN) !=RESET)
-    {
-      /* Clear Direction counter changed from Up to Down flag */
-      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_DOWN);
-      
-      /* Direction counter changed from Up to Down Callback */
-      HAL_LPTIM_DirectionDownCallback(hlptim);      
-    }
-  }
+//  if(__HAL_LPTIM_GET_FLAG(hlptim, LPTIM_FLAG_DOWN) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(hlptim, LPTIM_IT_DOWN) !=RESET)
+//    {
+//      /* Clear Direction counter changed from Up to Down flag */
+//      __HAL_LPTIM_CLEAR_FLAG(hlptim, LPTIM_FLAG_DOWN);
+//      
+//      /* Direction counter changed from Up to Down Callback */
+//      HAL_LPTIM_DirectionDownCallback(hlptim);      
+//    }
+//  }
 
-  __HAL_LPTIM_WAKEUPTIMER_EXTI_CLEAR_FLAG();
+//  __HAL_LPTIM_WAKEUPTIMER_EXTI_CLEAR_FLAG();
 }
 
 /**

@@ -4,7 +4,7 @@
   * @brief   Interrupt Service Routines.
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -69,6 +69,20 @@ uint16_t bit_0 = 0;
 uint16_t bit_n = 0;
 uint16_t binn;
 
+extern	uint8_t hpt_rept_cnt;
+extern	uint8_t hpt_rept;
+extern	uint8_t rx_state;
+extern	uint8_t rx_buff_cnt;
+extern	uint8_t ccc;
+extern	uint32_t bcc, bcc2;
+extern	uint8_t hpt_rept_type;
+uint8_t bite_cnt = 0;
+
+extern	uint32_t hpt_buff[];
+extern	uint8_t databuff[];
+extern	uint8_t SoftUart[];
+extern	uint8_t UartBuffByte[10];	
+
 extern uint8_t blink_type;
 extern uint16_t blink_ext;
 uint16_t blink_cnt = 0;
@@ -116,7 +130,6 @@ extern UART_HandleTypeDef huart2;
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
@@ -131,6 +144,19 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32l0xx.s).                    */
 /******************************************************************************/
+
+/**
+* @brief This function handles RCC global interrupt.
+*/
+void RCC_IRQHandler(void)
+{
+  /* USER CODE BEGIN RCC_IRQn 0 */
+
+  /* USER CODE END RCC_IRQn 0 */
+  /* USER CODE BEGIN RCC_IRQn 1 */
+
+  /* USER CODE END RCC_IRQn 1 */
+}
 
 /**
 * @brief This function handles EXTI line 4 to 15 interrupts.
@@ -194,14 +220,61 @@ void DMA1_Channel4_5_6_7_IRQHandler(void)
 */
 void LPTIM1_IRQHandler(void)
 {
-  /* USER CODE BEGIN LPTIM1_IRQn 0 */
+	if(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARRM) != RESET)
+  {
+    if(__HAL_LPTIM_GET_IT_SOURCE(&hlptim1, LPTIM_IT_ARRM) !=RESET)
+    {
+      /* Clear Autoreload match flag */
+      __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
+HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);				// убрать
 
+  /* USER CODE BEGIN LPTIM1_IRQn 0 */
+	if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
+	{
+
+		UartBuffByte[rx_buff_cnt] = 0;
+		rx_buff_cnt++;
+		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
+			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);
+	}
+	else
+	{
+		
+		UartBuffByte[rx_buff_cnt] = 1;
+		rx_buff_cnt++;
+		
+		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
+			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);
+	}
+	
+	if(rx_buff_cnt == 10)
+	{
+		if((UartBuffByte[0] == 0)&&(UartBuffByte[9] == 1))
+		{
+			SoftUart[bite_cnt] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
+			bite_cnt++;
+			if(bite_cnt == TXBUFF)
+				if(SoftUart[0] == 0x12U)
+				{
+					bcc = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
+					bite_cnt = 0;
+				}
+		}
+		else
+			memset(UartBuffByte,0,sizeof(UartBuffByte));
+		rx_buff_cnt = 0;
+
+		HAL_LPTIM_Counter_Stop_IT(&hlptim1);
+
+	}
+	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);					// убрать
+//	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
   /* USER CODE END LPTIM1_IRQn 0 */
-  HAL_LPTIM_IRQHandler(&hlptim1);
+//  HAL_LPTIM_IRQHandler(&hlptim1);
   /* USER CODE BEGIN LPTIM1_IRQn 1 */
 
   /* USER CODE END LPTIM1_IRQn 1 */
-}
+}}}
 
 /**
 * @brief This function handles TIM2 global interrupt.
@@ -343,6 +416,7 @@ if(blink_cnt>0)
 						bin = bin|1;
 						binx = dataBuff(1);
 						numb[numbit] = 1;
+						numbit++;
 					}
 				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))
 					{
@@ -405,7 +479,7 @@ if(blink_cnt>0)
 		}
 		if((bin == TEST_H)||(bin == TEST_L))
 		{
-			blink(TEST);
+			HPT_Transmite(TEST);
 		}
 		/*if(bin == REBOOT)
 			SCB->AIRCR = 0x05FA0004;*/

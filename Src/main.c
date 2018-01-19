@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -39,9 +39,7 @@
 #include "main.h"
 #include "stm32l0xx_hal.h"
 #include "adc.h"
-#include "crc.h"
 #include "dma.h"
-#include "iwdg.h"
 #include "lptim.h"
 #include "tim.h"
 #include "usart.h"
@@ -63,6 +61,7 @@
 extern UART2Recv_t UART2_RecvType;
 extern SettingParametrs_t SETUP;
 extern Cmd_Type CMD;
+extern uint8_t hpt_rept_cnt;
 uint32_t  buff1;
 extern uint8_t blink_cnt;
 
@@ -112,13 +111,16 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM21_Init();
   MX_USART2_UART_Init();
-//  MX_CRC_Init();
-//  MX_IWDG_Init();
   MX_LPTIM1_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);			// RESET потому что стоит ключ там 
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+	
+
+
+//	HPT_Transmite(REQUEST);
+
 
 //#ifdef DFS
 //	DefaultSettings();
@@ -129,10 +131,7 @@ int main(void)
 		DefaultSettings();
 	else
 		LoadSetting(&SETUP);
-	
-
-	//SaveSetting(&SETUP);
-	
+		
 	UART2_RecvType = UART2_RECV_CMD;
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 
@@ -177,12 +176,10 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI
-                              |RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = 16;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_4;
