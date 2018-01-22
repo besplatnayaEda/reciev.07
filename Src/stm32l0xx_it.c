@@ -69,7 +69,7 @@ uint16_t bit_0 = 0;
 uint16_t bit_n = 0;
 uint16_t binn;
 
-extern	uint8_t hpt_rept_cnt;
+extern	uint16_t hpt_rept_cnt;
 extern	uint8_t hpt_rept;
 extern	uint8_t rx_state;
 extern	uint8_t rx_buff_cnt;
@@ -87,6 +87,7 @@ extern uint8_t blink_type;
 extern uint16_t blink_ext;
 uint16_t blink_cnt = 0;
 extern uint8_t  blink_8sec;
+extern uint8_t en_cnt;
 
 float max;
 float min;
@@ -235,7 +236,7 @@ HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);			
 		UartBuffByte[rx_buff_cnt] = 0;
 		rx_buff_cnt++;
 		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
-			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);
+			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);		//170 35000 кбод
 	}
 	else
 	{
@@ -244,7 +245,7 @@ HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);			
 		rx_buff_cnt++;
 		
 		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
-			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);
+			HAL_LPTIM_Counter_Start_IT(&hlptim1,780); //170 35000 кбод
 	}
 	
 	if(rx_buff_cnt == 10)
@@ -315,6 +316,52 @@ if(blink_cnt>0)
 	
 //	if(cnt_hpt)
 //		cnt_hpt++;
+	
+	if(en_cnt)
+	{
+		switch(hpt_rept_cnt)
+		{
+			case 624:			// подтверждение
+				if(hpt_rept_type == CONFIRM)
+				{
+					HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
+					en_cnt = 0;
+					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
+				}
+				break;
+			case 1264:		// запрос		
+					if(hpt_rept_type == REQUEST)
+						HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
+				break;
+			case 1280:		// запрос
+				if(hpt_rept_type == REQUEST)
+				{
+					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
+					IRQ_abort = 0;
+					rx_buff_cnt = 0;
+				}
+				break;
+			case 1600:		// запрос
+				if(hpt_rept_type == REQUEST)
+				{
+					IRQ_abort = 0;
+					rx_buff_cnt = 0;
+					en_cnt = 0;
+				}
+				break;
+			case 1888:		// проверка
+				if(hpt_rept_type == TEST)
+				{
+					HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
+					en_cnt = 0;
+					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
+				}
+				break;
+			case 32000:		// проверка
+				break;
+		}
+		hpt_rept_cnt++;
+	}
 	
 	if(!blink_trg)
 	{

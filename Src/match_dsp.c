@@ -31,13 +31,16 @@ const uint32_t pdat1[]		= {250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,250
 
 _Bool blink_trg = 0;
 _Bool blink_end = 0;
-uint8_t blink_type = 0;
-uint8_t blink_8sec;
-uint16_t blink_ext;
+	
+uint8_t blink_type = 0;		// тип моргания
+uint8_t blink_8sec;				// количество 8-ми секундных ожиданий
+uint16_t blink_ext;				// внешний импульс
 extern DMA_HandleTypeDef hdma_tim2_ch1;
 
-	uint8_t hpt_rept_cnt;
-	uint8_t hpt_rept = 0;
+	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
+	
+	
+	uint8_t hpt_rept = 0;		
 	uint8_t rx_state = 0;
 	uint8_t rx_buff_cnt = 0;
 	uint8_t ccc;
@@ -45,11 +48,14 @@ extern DMA_HandleTypeDef hdma_tim2_ch1;
 uint8_t hpt_rept_type;
 uint32_t cnt_hpt;
 uint32_t hpt_buff[DATALEN];
+	
 uint8_t databuff[DATALEN];
 uint8_t SoftUart[TXBUFF];
+
 uint8_t UartBuffByte[10];			// start 8data stop 
 	
 	uint8_t IRQ_abort = 0;		// 0 - ждем уарт, 1 - ждем моргание
+	uint8_t en_cnt = 0;				// запуск счета 1 - запущен, 0 - остановлен
 
 SettingParametrs_t SETUP;
 UART2Recv_t UART2_RecvType;
@@ -148,11 +154,9 @@ float IIR_SOS(float in, float *coef, float *his)
 		
 		// восстановление числа
 		
-		for(uint8_t i = 0; i < DATALEN; i++)
-		{
-			databin = databin<<1;
-			databin = databin|databuff[i];
-		}
+//		databin = databuff[0] | databuff[1]<<1 | databuff[2]<<2 | databuff[3]<<3 | databuff[4]<<4 | databuff[5]<<5 | databuff[6]<<6 | databuff[7]<<7 | databuff[8]<<8 | databuff[9]<<9 | databuff[10]<<10 | databuff[11]<<11 | databuff[12]<<12 | databuff[13]<<13 | databuff[14]<<14 | databuff[15]<<15 ; // младшим вперед
+		databin = databuff[15] | databuff[14]<<1 | databuff[13]<<2 | databuff[12]<<3 | databuff[11]<<4 | databuff[10]<<5 | databuff[9]<<6 | databuff[8]<<7 | databuff[7]<<8 | databuff[6]<<9 | databuff[5]<<10 | databuff[4]<<11 | databuff[3]<<12 | databuff[2]<<13 | databuff[1]<<14 | databuff[0]<<15 ; // младшим вперед
+		
 		
 		// сравнение массивов
 //		if(memcmp(&databuff, &alarm, sizeof(databuff)))
@@ -213,7 +217,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 //					HAL_LPTIM_Counter_Start_IT(&hlptim1,35);
 					if((rx_buff_cnt == 0) && !IRQ_abort)
-						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);
+						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
 
 
 					blink_ext = 0;
@@ -251,18 +255,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	
 void HAL_LPTIM_AutoReloadMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
-	bcc2++;
-////	if(hpt_rept)			// обработка омпульса ответа НРТ
-////	{
-////		hpt_rept_cnt++;
-////	if(hpt_rept_cnt == hpt_rept_type)
-////		{
-////			HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
-////			HAL_LPTIM_Counter_Stop_IT(&hlptim1);
-////			hpt_rept = 0;
-////			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
-////		}
-////	}
+	if(hpt_rept)			// обработка омпульса ответа НРТ
+	{
+		hpt_rept_cnt++;
+	if(hpt_rept_cnt == hpt_rept_type)
+		{
+			HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
+			HAL_LPTIM_Counter_Stop_IT(&hlptim1);
+			hpt_rept = 0;
+			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
+		}
+	}
 
 }	
 
@@ -272,20 +275,21 @@ void HPT_Transmite(uint8_t type)
 	hpt_rept = 1;
 	hpt_rept_cnt = 0;
 	hpt_rept_type = type;
-	HAL_LPTIM_Counter_Start_IT(&hlptim1,40000);			// 5 ms  32000000/4
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);
 	
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if(blink_trg)
-	{
-		if(CAPLAMP_OUT1_GPIO_Port->IDR & CAPLAMP_OUT1_Pin)
-			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
-		else
-			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
-	}//if(!blink_trg)
-	//	HAL_GPIO_WritePin(Interrupt_OUT_GPIO_Port,Interrupt_OUT_Pin, GPIO_PIN_RESET);
+	if(htim->Instance == TIM21)
+		if(blink_trg)
+		{
+			if(CAPLAMP_OUT1_GPIO_Port->IDR & CAPLAMP_OUT1_Pin)
+				HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+			else
+				HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
+		}
+//if(!blink_trg)
+//	HAL_GPIO_WritePin(Interrupt_OUT_GPIO_Port,Interrupt_OUT_Pin, GPIO_PIN_RESET);
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
@@ -308,7 +312,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 		SETUP.f2 = 966;
 		SETUP.BR = 20;
 		SETUP.serailnum	= 0x00000000U;
-		SETUP.firmware	= 0x8097U;
+		SETUP.firmware	= 0x9897U;
 		 // f =  984 , BR = 2.0
 /*a1*/   SETUP.cf1s1[0] = 0.702541857155492;
 /*a2*/   SETUP.cf1s1[1] = 0.994534406218589;

@@ -15,6 +15,7 @@
 #define RX_BUSY		1
 
 
+
 #define CONFIRM		39		//	195 ms
 #define REQUEST		79		//	395 ms
 #define	TEST			118		//	590 ms

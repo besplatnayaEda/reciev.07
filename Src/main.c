@@ -133,19 +133,19 @@ int main(void)
 		LoadSetting(&SETUP);
 		
 	UART2_RecvType = UART2_RECV_CMD;
-	HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
+//	HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 
-	HAL_ADCEx_Calibration_Start(&hadc,1);		// калибровка ацп
-	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);			// запуск ацп пдп
+//	HAL_ADCEx_Calibration_Start(&hadc,1);		// калибровка ацп
+//	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);			// запуск ацп пдп
 	
 	
 	
  
-	blink(START);
+//	blink(START);
 
 
 	
-	HAL_TIM_Base_Start_IT(&htim21);					//запуск таймера
+//	HAL_TIM_Base_Start_IT(&htim21);					//запуск таймера
   /* USER CODE END 2 */
 
   /* Infinite loop */
