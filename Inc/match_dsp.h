@@ -133,7 +133,7 @@ void SaveSetting(SettingParametrs_t *Settings);
 void LoadSetting(SettingParametrs_t *Settings);
 
 void HPT_Transmite(uint8_t type);			// ответ HPT метке
-
+void S_UART(void);
 
 uint16_t dataBuff(uint8_t data);
 

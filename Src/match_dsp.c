@@ -132,6 +132,35 @@ float IIR_SOS(float in, float *coef, float *his)
 
     return out;
 }
+void S_UART(void)
+{
+	__disable_irq();
+	
+	for(uint16_t j = 0; j < 138; j++)
+		__nop();
+	
+	for(uint8_t b = 0; b < 4; b++)
+	{
+		for(uint8_t i = 1; i < 10; i++)
+		{
+			if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
+				UartBuffByte[i] = 0;
+			else
+				UartBuffByte[i] = 1;	
+				
+			for(uint16_t j = 0; j < 277; j++)						// пауза
+				__nop();
+		}
+		
+		SoftUart[b] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
+	}
+	
+	if(SoftUart[0] == 0x12U)
+		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
+
+	SaveSetting(&SETUP);
+	__enable_irq ();
+}
 
 
 // сейчас передача идет старшим вперед databuff[0] - старший
@@ -212,8 +241,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(External_IN_GPIO_Port->IDR & External_IN_Pin)																	// прерывание по фронту
 				{
 					if((rx_buff_cnt == 0) && !IRQ_abort)
-						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
-
+//						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
+						S_UART();
 
 					//blink_ext = 0;
 					if(IRQ_abort)

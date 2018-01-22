@@ -111,7 +111,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM21_Init();
   MX_USART2_UART_Init();
-  MX_LPTIM1_Init();
+//  MX_LPTIM1_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);			// RESET потому что стоит ключ там 
