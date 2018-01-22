@@ -1,6 +1,6 @@
 
 #include	"stm32l0xx_hal.h"
-//#include	"math.h"
+#include "adc.h"
 #include	"match_dsp.h"
 #include <string.h>
 
@@ -12,7 +12,7 @@
 float history11[] = {0,0},history12[] = {0,0},history21[] = {0,0},history22[] = {0,0},historyl[] = {0,0};
 
 #define DATALEN	16
-#define INVERT_BYTE(a)   ((a&1)<<15) | ((a&2)<<13) | ((a&4)<<11) | ((a&8)<<9) | ((a&16)<<7) | ((a&32)<<5) | ((a&64)<<3) | ((a&128)<<1) | ((a&256)>>1) | ((a&512)>>3) | ((a&1024)>>5) | ((a&2048)>>7) | ((a&4096)>>9) | ((a&8192)>>11) | ((a&16384)>>13) | ((a&32768)>>15)
+#define INVERT_HALFWORD(a)   ((a&1)<<15) | ((a&2)<<13) | ((a&4)<<11) | ((a&8)<<9) | ((a&16)<<7) | ((a&32)<<5) | ((a&64)<<3) | ((a&128)<<1) | ((a&256)>>1) | ((a&512)>>3) | ((a&1024)>>5) | ((a&2048)>>7) | ((a&4096)>>9) | ((a&8192)>>11) | ((a&16384)>>13) | ((a&32768)>>15)
 
 
 
@@ -24,12 +24,12 @@ uint8_t alarm[] = {1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0};
 
 const uint32_t pdat0[]		= {0,125,125,125,0};	// старт
 const uint32_t pdat2[]		= {0,250,125,250,0}; // прошивка
-const uint32_t pdat3[]		= {0,0,0,0,0};				// тест
+
 													//{125,125,125,125,0,250,0,250,0,250,0,250,125,125,125,125,125,0,250,0,250,0,250,125,125,125,125,125,0,250,0,250,0,250,125,125,125,125,125,0,0};	
 const uint32_t pdat[]			= {125,125,125,125,125,0,250,0,250,0,250,0,125,125,125,125,125,250,0,250,0,250,0,125,125,125,125,125,250,0,250,0,250,0,125,125,125,125,125,0,0};	// авария
 const uint32_t pdat1[]		= {250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,0};													// персональный
 
-_Bool blink_trg = 0;
+
 _Bool blink_end = 0;
 	
 uint8_t blink_type = 0;		// тип моргания
@@ -43,11 +43,11 @@ extern DMA_HandleTypeDef hdma_tim2_ch1;
 	uint8_t hpt_rept = 0;		
 	uint8_t rx_state = 0;
 	uint8_t rx_buff_cnt = 0;
-	uint8_t ccc;
-	uint32_t bcc, bcc2;
+
+
 uint8_t hpt_rept_type;
-uint32_t cnt_hpt;
-uint32_t hpt_buff[DATALEN];
+
+
 	
 uint8_t databuff[DATALEN];
 uint8_t SoftUart[TXBUFF];
@@ -77,20 +77,17 @@ void blink(char mode)
 	switch(mode)
 	{
 		case START:
-			blink_trg = 1;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat0, sizeof(pdat0)/sizeof(uint32_t));
 		break;
 		case ALARM:
 			blink_type = ALARM;
-			blink_trg = 1;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
 			HPT_Transmite(CONFIRM);
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat, sizeof(pdat)/sizeof(uint32_t));
 		break;
 		case PERSONAL:
-			blink_trg = 1;
 			blink_type = PERSONAL;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
@@ -98,7 +95,6 @@ void blink(char mode)
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat1, sizeof(pdat1)/sizeof(uint32_t));
 		break;
 		case OK_SET:
-			blink_trg = 1;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat2, sizeof(pdat2)/sizeof(uint32_t));
@@ -140,30 +136,30 @@ float IIR_SOS(float in, float *coef, float *his)
 
 // сейчас передача идет старшим вперед databuff[0] - старший
 	// должна быть младшим вперед databuff[0] - младший
-	uint16_t dataBuff(uint8_t data)
-	{
-		uint16_t databin;
+	//uint16_t dataBuff(uint8_t data)
+	//{
+	//	uint16_t databin;
 		
 		// кольцевой сдвиг
-		for(uint8_t i = DATALEN-1; i > 0; i--)
-		{
-			databuff[i] = databuff[i-1];
-		}
+	//	for(uint8_t i = DATALEN-1; i > 0; i--)
+	//	{
+	//		databuff[i] = databuff[i-1];
+	//	}
 		// запись нового бита
-		databuff[0] = data;
+	//	databuff[0] = data;
 		
 		// восстановление числа
 		
 //		databin = databuff[0] | databuff[1]<<1 | databuff[2]<<2 | databuff[3]<<3 | databuff[4]<<4 | databuff[5]<<5 | databuff[6]<<6 | databuff[7]<<7 | databuff[8]<<8 | databuff[9]<<9 | databuff[10]<<10 | databuff[11]<<11 | databuff[12]<<12 | databuff[13]<<13 | databuff[14]<<14 | databuff[15]<<15 ; // младшим вперед
-		databin = databuff[15] | databuff[14]<<1 | databuff[13]<<2 | databuff[12]<<3 | databuff[11]<<4 | databuff[10]<<5 | databuff[9]<<6 | databuff[8]<<7 | databuff[7]<<8 | databuff[6]<<9 | databuff[5]<<10 | databuff[4]<<11 | databuff[3]<<12 | databuff[2]<<13 | databuff[1]<<14 | databuff[0]<<15 ; // младшим вперед
+	//	databin = databuff[15] | databuff[14]<<1 | databuff[13]<<2 | databuff[12]<<3 | databuff[11]<<4 | databuff[10]<<5 | databuff[9]<<6 | databuff[8]<<7 | databuff[7]<<8 | databuff[6]<<9 | databuff[5]<<10 | databuff[4]<<11 | databuff[3]<<12 | databuff[2]<<13 | databuff[1]<<14 | databuff[0]<<15 ; // младшим вперед
 		
 		
 		// сравнение массивов
 //		if(memcmp(&databuff, &alarm, sizeof(databuff)))
 //			blink(ALARM);
 		
-		return databin;
-	}
+	//	return databin;
+	//}
 	
 
 
@@ -215,12 +211,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 								
 				if(External_IN_GPIO_Port->IDR & External_IN_Pin)																	// прерывание по фронту
 				{
-//					HAL_LPTIM_Counter_Start_IT(&hlptim1,35);
 					if((rx_buff_cnt == 0) && !IRQ_abort)
 						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
 
 
-					blink_ext = 0;
+					//blink_ext = 0;
 					if(IRQ_abort)
 						HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET); // включение большого света
 					temp = CAPLAMP_OUT1_GPIO_Port -> MODER;																				  //
@@ -253,43 +248,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		}
 	}
 	
-void HAL_LPTIM_AutoReloadMatchCallback(LPTIM_HandleTypeDef *hlptim)
-{
-	if(hpt_rept)			// обработка омпульса ответа НРТ
-	{
-		hpt_rept_cnt++;
-	if(hpt_rept_cnt == hpt_rept_type)
-		{
-			HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
-			HAL_LPTIM_Counter_Stop_IT(&hlptim1);
-			hpt_rept = 0;
-			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
-		}
-	}
-
-}	
 
 void HPT_Transmite(uint8_t type)
 {
 	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);							// отключение прерываний по входу НРТ
-	hpt_rept = 1;
-	hpt_rept_cnt = 0;
 	hpt_rept_type = type;
+	if(type == REQUEST)
+		HAL_ADC_Stop_DMA(&hadc);
+	hpt_rept_cnt = 0;
+	en_cnt = 1;
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);
 	
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM21)
-		if(blink_trg)
+//		if(blink_trg)
 		{
 			if(CAPLAMP_OUT1_GPIO_Port->IDR & CAPLAMP_OUT1_Pin)
 				HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 			else
 				HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 		}
-//if(!blink_trg)
-//	HAL_GPIO_WritePin(Interrupt_OUT_GPIO_Port,Interrupt_OUT_Pin, GPIO_PIN_RESET);
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
@@ -297,7 +277,6 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	blink_end = 1;
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 	HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
-	blink_trg = 0;
 }
 
 	

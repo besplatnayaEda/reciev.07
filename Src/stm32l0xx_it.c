@@ -38,6 +38,7 @@
 /* USER CODE BEGIN 0 */
 #include "match_dsp.h"
 #include "math.h"
+#include "adc.h"
 #include <string.h>
 
 #define	N	16
@@ -60,7 +61,7 @@ uint16_t  tmptime = 0;
 
 static uint8_t numbit = 0;
 
-static uint16_t j, bin, binx;
+static uint16_t j, bin;//, binx;
 extern uint16_t name;
 
 
@@ -73,12 +74,12 @@ extern	uint16_t hpt_rept_cnt;
 extern	uint8_t hpt_rept;
 extern	uint8_t rx_state;
 extern	uint8_t rx_buff_cnt;
-extern	uint8_t ccc;
-extern	uint32_t bcc, bcc2;
+
+uint16_t bcc;
 extern	uint8_t hpt_rept_type;
 uint8_t bite_cnt = 0;
 
-extern	uint32_t hpt_buff[];
+
 extern	uint8_t databuff[];
 extern	uint8_t SoftUart[];
 extern	uint8_t UartBuffByte[10];	
@@ -88,9 +89,8 @@ extern uint16_t blink_ext;
 uint16_t blink_cnt = 0;
 extern uint8_t  blink_8sec;
 extern uint8_t en_cnt;
+extern 	uint8_t IRQ_abort;
 
-float max;
-float min;
 
 
 _Bool frame = 0;
@@ -98,7 +98,7 @@ _Bool pass = 0;
 _Bool det = 0;
 _Bool numb[N];
 _Bool numbn[N];
-extern _Bool blink_trg;
+//extern _Bool blink_trg;
 
 
 static uint8_t  nop = 0;
@@ -149,15 +149,15 @@ void SysTick_Handler(void)
 /**
 * @brief This function handles RCC global interrupt.
 */
-void RCC_IRQHandler(void)
-{
+//void RCC_IRQHandler(void)
+//{
   /* USER CODE BEGIN RCC_IRQn 0 */
 
   /* USER CODE END RCC_IRQn 0 */
   /* USER CODE BEGIN RCC_IRQn 1 */
 
   /* USER CODE END RCC_IRQn 1 */
-}
+//}
 
 /**
 * @brief This function handles EXTI line 4 to 15 interrupts.
@@ -195,7 +195,7 @@ void DMA1_Channel2_3_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 0 */
 
   /* USER CODE END DMA1_Channel2_3_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart2_tx);
+//  HAL_DMA_IRQHandler(&hdma_usart2_tx);
   HAL_DMA_IRQHandler(&hdma_tim2_ch2);
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
 
@@ -210,7 +210,7 @@ void DMA1_Channel4_5_6_7_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel4_5_6_7_IRQn 0 */
 
   /* USER CODE END DMA1_Channel4_5_6_7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart2_rx);
+  //HAL_DMA_IRQHandler(&hdma_usart2_rx);
   /* USER CODE BEGIN DMA1_Channel4_5_6_7_IRQn 1 */
 
   /* USER CODE END DMA1_Channel4_5_6_7_IRQn 1 */
@@ -225,9 +225,8 @@ void LPTIM1_IRQHandler(void)
   {
     if(__HAL_LPTIM_GET_IT_SOURCE(&hlptim1, LPTIM_IT_ARRM) !=RESET)
     {
-      /* Clear Autoreload match flag */
+      // Clear Autoreload match flag 
       __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
-HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);				// убрать
 
   /* USER CODE BEGIN LPTIM1_IRQn 0 */
 	if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
@@ -268,8 +267,6 @@ HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);			
 		HAL_LPTIM_Counter_Stop_IT(&hlptim1);
 
 	}
-	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);					// убрать
-//	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
   /* USER CODE END LPTIM1_IRQn 0 */
 //  HAL_LPTIM_IRQHandler(&hlptim1);
   /* USER CODE BEGIN LPTIM1_IRQn 1 */
@@ -297,26 +294,30 @@ void TIM2_IRQHandler(void)
 void TIM21_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM21_IRQn 0 */
-if(blink_cnt>0)
-		blink_cnt++;
-	if((blink_cnt>25600))
-	{
-		blink_cnt = 1;
-		blink_8sec++;
-		if(blink_8sec <= 4)
-		{
-			blink(blink_type);
-		}
-		else
-		{
-			blink_8sec = 0;
-			blink_cnt = 0;
-		}
-	}
+	if(__HAL_TIM_GET_FLAG(&htim21, TIM_FLAG_UPDATE) != RESET)
+  {
+    if(__HAL_TIM_GET_IT_SOURCE(&htim21, TIM_IT_UPDATE) !=RESET)
+    {
+      __HAL_TIM_CLEAR_IT(&htim21, TIM_IT_UPDATE);
+			
+//if(blink_cnt>0)
+//		blink_cnt++;
+//	if((blink_cnt>25600))
+//	{
+//		blink_cnt = 1;
+//		blink_8sec++;
+//		if(blink_8sec <= 4)
+//		{
+//			blink(blink_type);
+//		}
+//		else
+//		{
+//			blink_8sec = 0;
+//			blink_cnt = 0;
+//		}
+//	}
 	
-//	if(cnt_hpt)
-//		cnt_hpt++;
-	
+
 	if(en_cnt)
 	{
 		switch(hpt_rept_cnt)
@@ -347,6 +348,7 @@ if(blink_cnt>0)
 					IRQ_abort = 0;
 					rx_buff_cnt = 0;
 					en_cnt = 0;
+					HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				}
 				break;
 			case 1888:		// проверка
@@ -358,18 +360,19 @@ if(blink_cnt>0)
 				}
 				break;
 			case 32000:		// проверка
+				HPT_Transmite(REQUEST);
 				break;
 		}
 		hpt_rept_cnt++;
 	}
 	
-	if(!blink_trg)
-	{
-		if((blink_ext < 3200))
-			blink_ext++;
-		if(blink_ext == 3200)
-			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
-	}
+//	if(!blink_trg)
+//	{
+//		if((blink_ext < 3200))
+//			blink_ext++;
+//		if(blink_ext == 3200)
+//			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+//	}
 	
 
 	buff0 = 3*((float)buff1)/65520; //65535;							// ?????? ? ?????? 
@@ -437,8 +440,6 @@ if(blink_cnt>0)
 			{
 				j=0;
         det=1;
-				max = 0;
-				min = 0;
       }
   }
   else
@@ -461,16 +462,16 @@ if(blink_cnt>0)
 					{
 						bin = bin<<1;
 						bin = bin|1;
-						binx = dataBuff(1);
-						numb[numbit] = 1;
+					//	binx = dataBuff(1);
+					//	numb[numbit] = 1;
 						numbit++;
 					}
 				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))
 					{
 						bin = bin<<1;
 						bin = bin|0;
-						binx = dataBuff(0);
-						numb[numbit] = 0;
+					//	binx = dataBuff(0);
+					//	numb[numbit] = 0;
 						numbit++;
 					}
 				if((bit_n > bit_0)&&(bit_n > bit_1))
@@ -481,7 +482,7 @@ if(blink_cnt>0)
 								//bin = bin<<1;
 								//bin = bin|0;
 								//numb[numbit] = 0;
-								binx = dataBuff(0);
+						//		binx = dataBuff(0);
 								numbit++;
 							}
 						else
@@ -494,7 +495,7 @@ if(blink_cnt>0)
 								j=0;
 								bin=0;
 								numbit = 0;
-								memset(numb,0,sizeof(numb));
+							//	memset(numb,0,sizeof(numb));
 							}
 					}
 			
@@ -536,11 +537,11 @@ if(blink_cnt>0)
 		numbit = 0;
 	}
   /* USER CODE END TIM21_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim21);
+//  HAL_TIM_IRQHandler(&htim21);
   /* USER CODE BEGIN TIM21_IRQn 1 */
 
   /* USER CODE END TIM21_IRQn 1 */
-}
+}}}
 
 /**
 * @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXTI line 26.

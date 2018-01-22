@@ -16,9 +16,10 @@
 
 
 
-#define CONFIRM		39		//	195 ms
-#define REQUEST		79		//	395 ms
-#define	TEST			118		//	590 ms
+#define CONFIRM		0		//	195 ms
+#define REQUEST		1		//	395 ms
+#define	TEST			2		//	590 ms
+#define ENABLE		3		// включение HPT
 
 #define TXBUFF 4
 
@@ -137,25 +138,3 @@ void HPT_Transmite(uint8_t type);			// ответ HPT метке
 uint16_t dataBuff(uint8_t data);
 
 
-/*
-
-typedef struct rxData {
-	// настройки приемника
-	uint16_t name;
-	uint8_t br;
-	uint16_t f1;
-	uint16_t f2;
-	uint8_t res;
-} rxData_t, *prxData_t;
-
-typedef struct txData {
-	// ответ приемника
-	uint8_t start;
-	uint8_t det;
-	uint8_t nop;
-	uint16_t name;
-	uint16_t crc;
-	uint8_t stop;
-	
-} txData_t, *ptxData_t;
-*/
