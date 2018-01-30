@@ -364,7 +364,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 		SETUP.f2 = 966;
 		SETUP.BR = 20;
 		SETUP.serailnum	= 0x00000000U;
-		SETUP.firmware	= 0x9897U;
+		SETUP.firmware	= 0xF097U;
 		 // f =  984 , BR = 2.0
 /*a1*/   SETUP.cf1s1[0] = 0.702541857155492;
 /*a2*/   SETUP.cf1s1[1] = 0.994534406218589;
