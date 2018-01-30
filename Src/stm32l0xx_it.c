@@ -55,8 +55,8 @@
 extern uint32_t buff1;	// буфер
 
 static float retf11,retf12,retf21,retf22,retfl, buff0, buffl0;	// фильтры
-extern uint16_t cnt_hpt;
-uint16_t  tmptime = 0;
+
+
 
 
 static uint8_t numbit = 0;
@@ -72,24 +72,27 @@ uint16_t binn;
 
 extern	uint16_t hpt_rept_cnt;
 extern	uint8_t hpt_rept;
-extern	uint8_t rx_state;
-extern	uint8_t rx_buff_cnt;
+extern	uint8_t hpt_rept_type;
+extern	uint8_t en_cnt;
+extern 	uint8_t IRQ_abort;
+
 
 uint16_t bcc;
-extern	uint8_t hpt_rept_type;
+
 uint8_t bite_cnt = 0;
 
 
 extern	uint8_t databuff[];
 extern	uint8_t SoftUart[];
-extern	uint8_t UartBuffByte[10];	
+
 
 extern uint8_t blink_type;
 extern uint16_t blink_ext;
 uint16_t blink_cnt = 0;
-extern uint8_t  blink_8sec;
-extern uint8_t en_cnt;
-extern 	uint8_t IRQ_abort;
+extern uint8_t blink_8sec;
+extern uint8_t blink_trg;
+
+
 
 
 
@@ -98,7 +101,6 @@ _Bool pass = 0;
 _Bool det = 0;
 _Bool numb[N];
 _Bool numbn[N];
-//extern _Bool blink_trg;
 
 
 static uint8_t  nop = 0;
@@ -195,7 +197,7 @@ void DMA1_Channel2_3_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 0 */
 
   /* USER CODE END DMA1_Channel2_3_IRQn 0 */
-//  HAL_DMA_IRQHandler(&hdma_usart2_tx);
+  HAL_DMA_IRQHandler(&hdma_usart2_tx);
   HAL_DMA_IRQHandler(&hdma_tim2_ch2);
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
 
@@ -210,7 +212,7 @@ void DMA1_Channel4_5_6_7_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel4_5_6_7_IRQn 0 */
 
   /* USER CODE END DMA1_Channel4_5_6_7_IRQn 0 */
-  //HAL_DMA_IRQHandler(&hdma_usart2_rx);
+  HAL_DMA_IRQHandler(&hdma_usart2_rx);
   /* USER CODE BEGIN DMA1_Channel4_5_6_7_IRQn 1 */
 
   /* USER CODE END DMA1_Channel4_5_6_7_IRQn 1 */
@@ -219,60 +221,60 @@ void DMA1_Channel4_5_6_7_IRQHandler(void)
 /**
 * @brief This function handles LPTIM1 global interrupt / LPTIM1 wake-up interrupt through EXTI line 29.
 */
-void LPTIM1_IRQHandler(void)
-{
-	if(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARRM) != RESET)
-  {
-    if(__HAL_LPTIM_GET_IT_SOURCE(&hlptim1, LPTIM_IT_ARRM) !=RESET)
-    {
-      // Clear Autoreload match flag 
-      __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
+//void LPTIM1_IRQHandler(void)
+//{
+//	if(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARRM) != RESET)
+//  {
+//    if(__HAL_LPTIM_GET_IT_SOURCE(&hlptim1, LPTIM_IT_ARRM) !=RESET)
+//    {
+//      // Clear Autoreload match flag 
+//      __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
 
-  /* USER CODE BEGIN LPTIM1_IRQn 0 */
-	if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
-	{
+//  /* USER CODE BEGIN LPTIM1_IRQn 0 */
+//	if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
+//	{
 
-		UartBuffByte[rx_buff_cnt] = 0;
-		rx_buff_cnt++;
-		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
-			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);		//170 35000 кбод
-	}
-	else
-	{
-		
-		UartBuffByte[rx_buff_cnt] = 1;
-		rx_buff_cnt++;
-		
-		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
-			HAL_LPTIM_Counter_Start_IT(&hlptim1,780); //170 35000 кбод
-	}
-	
-	if(rx_buff_cnt == 10)
-	{
-		if((UartBuffByte[0] == 0)&&(UartBuffByte[9] == 1))
-		{
-			SoftUart[bite_cnt] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
-			bite_cnt++;
-			if(bite_cnt == TXBUFF)
-				if(SoftUart[0] == 0x12U)
-				{
-					bcc = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
-					bite_cnt = 0;
-				}
-		}
-		else
-			memset(UartBuffByte,0,sizeof(UartBuffByte));
-		rx_buff_cnt = 0;
+//		UartBuffByte[rx_buff_cnt] = 0;
+//		rx_buff_cnt++;
+//		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
+//			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);		//170 35000 кбод
+//	}
+//	else
+//	{
+//		
+//		UartBuffByte[rx_buff_cnt] = 1;
+//		rx_buff_cnt++;
+//		
+//		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
+//			HAL_LPTIM_Counter_Start_IT(&hlptim1,780); //170 35000 кбод
+//	}
+//	
+//	if(rx_buff_cnt == 10)
+//	{
+//		if((UartBuffByte[0] == 0)&&(UartBuffByte[9] == 1))
+//		{
+//			SoftUart[bite_cnt] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
+//			bite_cnt++;
+//			if(bite_cnt == TXBUFF)
+//				if(SoftUart[0] == 0x12U)
+//				{
+//					bcc = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
+//					bite_cnt = 0;
+//				}
+//		}
+//		else
+//			memset(UartBuffByte,0,sizeof(UartBuffByte));
+//		rx_buff_cnt = 0;
 
-		HAL_LPTIM_Counter_Stop_IT(&hlptim1);
+//		HAL_LPTIM_Counter_Stop_IT(&hlptim1);
 
-	}
-  /* USER CODE END LPTIM1_IRQn 0 */
-//  HAL_LPTIM_IRQHandler(&hlptim1);
-  /* USER CODE BEGIN LPTIM1_IRQn 1 */
+//	}
+//  /* USER CODE END LPTIM1_IRQn 0 */
+////  HAL_LPTIM_IRQHandler(&hlptim1);
+//  /* USER CODE BEGIN LPTIM1_IRQn 1 */
 
-  /* USER CODE END LPTIM1_IRQn 1 */
-}}}
+//  /* USER CODE END LPTIM1_IRQn 1 */
+//}}}
 
 /**
 * @brief This function handles TIM2 global interrupt.
@@ -294,12 +296,7 @@ void TIM2_IRQHandler(void)
 void TIM21_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM21_IRQn 0 */
-	if(__HAL_TIM_GET_FLAG(&htim21, TIM_FLAG_UPDATE) != RESET)
-  {
-    if(__HAL_TIM_GET_IT_SOURCE(&htim21, TIM_IT_UPDATE) !=RESET)
-    {
-      __HAL_TIM_CLEAR_IT(&htim21, TIM_IT_UPDATE);
-			
+	
 //if(blink_cnt>0)
 //		blink_cnt++;
 //	if((blink_cnt>25600))
@@ -317,6 +314,14 @@ void TIM21_IRQHandler(void)
 //		}
 //	}
 	
+	if(!blink_trg)
+	{
+		if((blink_ext < 3200))
+			blink_ext++;
+		if(blink_ext == 3200)
+			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+	}
+	
 
 	if(en_cnt)
 	{
@@ -330,28 +335,28 @@ void TIM21_IRQHandler(void)
 					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
 				}
 				break;
-			case 1264:		// запрос		
+			case 1280: //1264:		// запрос		
 					if(hpt_rept_type == REQUEST)
 						HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
 				break;
-			case 1280:		// запрос
+			case 1300: //1280:		// запрос
 				if(hpt_rept_type == REQUEST)
 				{
 					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
 					IRQ_abort = 0;
-					rx_buff_cnt = 0;
+//					rx_buff_cnt = 0;
 				}
 				break;
 			case 1600:		// запрос
 				if(hpt_rept_type == REQUEST)
 				{
-					IRQ_abort = 0;
-					rx_buff_cnt = 0;
+					IRQ_abort = 1;
+//					rx_buff_cnt = 0;
 					en_cnt = 0;
 					HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				}
 				break;
-			case 1888:		// проверка
+			case 2000: //1888:		// проверка
 				if(hpt_rept_type == TEST)
 				{
 					HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
@@ -360,7 +365,8 @@ void TIM21_IRQHandler(void)
 				}
 				break;
 			case 32000:		// проверка
-				HPT_Transmite(REQUEST);
+				if(hpt_rept_type == ENABLE)
+					HPT_Transmite(REQUEST);
 				break;
 		}
 		hpt_rept_cnt++;
@@ -388,33 +394,7 @@ void TIM21_IRQHandler(void)
 		buffl0 = fabsf(retf12)-fabsf(retf22);
 		retfl  = IIR_SOS(buffl0,SETUP.cflp,historyl);
 	
-#ifdef DEBUG
-		switch(CMD)
-		{
-			case START_DTR_FLP:
-				UART2_Trans_Data.cmd = SEND_DTR_FLP;
-				UART2_Trans_Data.value.f = retfl;
-				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
-			break;
-			case START_DTR_F1:
-				UART2_Trans_Data.cmd = SEND_DTR_F1;
-				UART2_Trans_Data.value.f = retf12;
-				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
-			break;
-			case START_DTR_F2:
-				UART2_Trans_Data.cmd = SEND_DTR_F2;
-				UART2_Trans_Data.value.f = retf22;
-				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
-			break;
-			case START_DTR_IN:
-				UART2_Trans_Data.cmd = SEND_DTR_IN;
-				UART2_Trans_Data.value.f = buff0;
-				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&UART2_Trans_Data,sizeof(UART2_Trans_Data));
-			break;
-			default:
-				break;
-		}
-#else
+
 		switch(CMD)
 		{
 			case START_DTR_FLP:
@@ -432,7 +412,7 @@ void TIM21_IRQHandler(void)
 			default:
 				break;
 		}
-#endif		
+
 		
 	if(!det)
   {
@@ -537,11 +517,11 @@ void TIM21_IRQHandler(void)
 		numbit = 0;
 	}
   /* USER CODE END TIM21_IRQn 0 */
-//  HAL_TIM_IRQHandler(&htim21);
+  HAL_TIM_IRQHandler(&htim21);
   /* USER CODE BEGIN TIM21_IRQn 1 */
 
   /* USER CODE END TIM21_IRQn 1 */
-}}}
+}
 
 /**
 * @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXTI line 26.

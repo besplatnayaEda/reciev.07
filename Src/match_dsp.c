@@ -35,13 +35,14 @@ _Bool blink_end = 0;
 uint8_t blink_type = 0;		// тип моргания
 uint8_t blink_8sec;				// количество 8-ми секундных ожиданий
 uint16_t blink_ext;				// внешний импульс
+uint8_t blink_trg;	
 extern DMA_HandleTypeDef hdma_tim2_ch1;
 
-	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
+	
 	
 	
 	uint8_t hpt_rept = 0;		
-	uint8_t rx_state = 0;
+
 	uint8_t rx_buff_cnt = 0;
 
 
@@ -52,19 +53,23 @@ uint8_t hpt_rept_type;
 uint8_t databuff[DATALEN];
 uint8_t SoftUart[TXBUFF];
 
-uint8_t UartBuffByte[10];			// start 8data stop 
+#define TB 40
+uint8_t UartBuffByte[TB];			// start 8data stop 
 	
+	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
 	uint8_t IRQ_abort = 0;		// 0 - ждем уарт, 1 - ждем моргание
 	uint8_t en_cnt = 0;				// запуск счета 1 - запущен, 0 - остановлен
 
 SettingParametrs_t SETUP;
 UART2Recv_t UART2_RecvType;
 UART2_Queue_Data UART2_Trans_Data;
+
 Cmd_Type CMD;
 Cmd_Type CMD_Rept;
 
 extern UART_HandleTypeDef huart2;
 extern LPTIM_HandleTypeDef hlptim1;
+
 // режим моргания 
 void blink(char mode)
 {
@@ -77,10 +82,12 @@ void blink(char mode)
 	switch(mode)
 	{
 		case START:
+			blink_trg = 1;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat0, sizeof(pdat0)/sizeof(uint32_t));
 		break;
 		case ALARM:
+			blink_trg = 1;
 			blink_type = ALARM;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
@@ -88,6 +95,7 @@ void blink(char mode)
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat, sizeof(pdat)/sizeof(uint32_t));
 		break;
 		case PERSONAL:
+			blink_trg = 1;
 			blink_type = PERSONAL;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
@@ -95,6 +103,7 @@ void blink(char mode)
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat1, sizeof(pdat1)/sizeof(uint32_t));
 		break;
 		case OK_SET:
+			blink_trg = 1;
 			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 			HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
 			HAL_TIM_PWM_Start_DMA(&htim2,TIM_CHANNEL_2, (uint32_t *)&pdat2, sizeof(pdat2)/sizeof(uint32_t));
@@ -136,28 +145,58 @@ void S_UART(void)
 {
 	__disable_irq();
 	
-	for(uint16_t j = 0; j < 138; j++)
-		__nop();
+	uint16_t j;
+	uint8_t i;
 	
-	for(uint8_t b = 0; b < 4; b++)
-	{
-		for(uint8_t i = 1; i < 10; i++)
-		{
-			if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
-				UartBuffByte[i] = 0;
-			else
-				UartBuffByte[i] = 1;	
-				
-			for(uint16_t j = 0; j < 277; j++)						// пауза
+		for(j = 0; j < 10; j++)						// пауза
 				__nop();
+	
+		for(i = 0; i < 19; i++)
+		{
+				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+			for(j = 0; j < 32; j++)						// пауза
+				__nop();
+
 		}
 		
-		SoftUart[b] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
-	}
-	
-	if(SoftUart[0] == 0x12U)
+		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+		
+		for(j = 0; j < 25; j++)						// пауза
+				__nop();
+		
+		for(i = 20; i < 29; i++)
+		{
+				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+			for(j = 0; j < 32; j++)						// пауза
+				__nop();
+
+		}
+		
+		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+		
+		for(j = 0; j < 25; j++)						// пауза
+				__nop();
+		
+		for(i = 30; i < TB; i++)
+		{
+				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+			for(j = 0; j < 32; j++)						// пауза
+				__nop();
+
+		}
+		
+		SoftUart[0] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
+		SoftUart[1] = UartBuffByte[11] | UartBuffByte[12]<<1 | UartBuffByte[13]<<2 | UartBuffByte[14]<<3 | UartBuffByte[15]<<4 | UartBuffByte[16]<<5 | UartBuffByte[17]<<6 | UartBuffByte[18]<<7 ;
+		SoftUart[2] = UartBuffByte[21] | UartBuffByte[22]<<1 | UartBuffByte[23]<<2 | UartBuffByte[24]<<3 | UartBuffByte[25]<<4 | UartBuffByte[26]<<5 | UartBuffByte[27]<<6 | UartBuffByte[28]<<7 ;
+		SoftUart[3] = UartBuffByte[31] | UartBuffByte[32]<<1 | UartBuffByte[33]<<2 | UartBuffByte[34]<<3 | UartBuffByte[35]<<4 | UartBuffByte[36]<<5 | UartBuffByte[37]<<6 | UartBuffByte[38]<<7 ;
+		
+		if(SoftUart[0] == 0x12U)
 		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
 
+	IRQ_abort = 1;
 	SaveSetting(&SETUP);
 	__enable_irq ();
 }
@@ -237,16 +276,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		switch(GPIO_Pin)
 		{
 			case External_IN_Pin:							// ?????? ??????
+				if(!blink_trg){
 								
 				if(External_IN_GPIO_Port->IDR & External_IN_Pin)																	// прерывание по фронту
 				{
-					if((rx_buff_cnt == 0) && !IRQ_abort)
+					if(!IRQ_abort)
 //						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
 						S_UART();
 
-					//blink_ext = 0;
 					if(IRQ_abort)
+					{
+						blink_ext = 0;
 						HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET); // включение большого света
+					}
+					
 					temp = CAPLAMP_OUT1_GPIO_Port -> MODER;																				  //
 					temp &= ~(GPIO_MODER_MODE1 << 0);																								//	перенастройка выхода с таймера на GPIO
 					temp |= ((GPIO_MODE_OUTPUT_PP & ((uint32_t)0x00000001U)) << 2);									//
@@ -271,7 +314,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 					
 					CAPLAMP_OUT1_GPIO_Port -> ODR &= ~CAPLAMP_OUT1_Pin;														  //	выключение малого света
 				}
-			
+			}
 				break;
 			
 		}
@@ -292,7 +335,7 @@ void HPT_Transmite(uint8_t type)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM21)
-//		if(blink_trg)
+		if(blink_trg)
 		{
 			if(CAPLAMP_OUT1_GPIO_Port->IDR & CAPLAMP_OUT1_Pin)
 				HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
@@ -304,6 +347,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
 	blink_end = 1;
+	blink_trg = 0;
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 	HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
 }
@@ -363,7 +407,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		
 		if (UART2_RECV_CMD == UART2_RecvType)
 		{
-				HAL_TIM_Base_Stop_IT(&htim21);			
+				HAL_TIM_Base_Stop_IT(&htim21);
+			
 		switch(CMD)
 		{
 			case SET_NAME_HPT:								// номер метки

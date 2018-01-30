@@ -40,7 +40,6 @@
 #include "stm32l0xx_hal.h"
 #include "adc.h"
 #include "dma.h"
-#include "lptim.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -64,6 +63,11 @@ extern Cmd_Type CMD;
 
 uint32_t  buff1;
 extern uint8_t blink_cnt;
+
+extern uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
+extern uint8_t IRQ_abort;		// 0 - ждем уарт, 1 - ждем моргание
+extern uint8_t en_cnt;				// запуск счета 1 - запущен, 0 - остановлен
+extern uint8_t hpt_rept_type;
 
 extern UART_HandleTypeDef huart2;
 extern DMA_HandleTypeDef hdma_tim2_ch1;
@@ -111,7 +115,6 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM21_Init();
   MX_USART2_UART_Init();
-//  MX_LPTIM1_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);			// RESET потому что стоит ключ там 
@@ -119,9 +122,11 @@ int main(void)
 	
 
 
-//	HPT_Transmite(REQUEST);
-
-
+//	HPT_Transmite(CONFIRM);
+hpt_rept_cnt = 0;
+	en_cnt = 1;
+hpt_rept_type =ENABLE;
+IRQ_abort = 0;
 //#ifdef DFS
 //	DefaultSettings();
 //	SaveSetting(&SETUP);
@@ -131,20 +136,17 @@ int main(void)
 		DefaultSettings();
 	else
 		LoadSetting(&SETUP);
-		
+//		
 	UART2_RecvType = UART2_RECV_CMD;
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 
-//	HAL_ADCEx_Calibration_Start(&hadc,1);		// калибровка ацп
+////	HAL_ADCEx_Calibration_Start(&hadc,1);		// калибровка ацп
 	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);			// запуск ацп пдп
-	
-	
-	
- 
+
 	blink(START);
 
 
-	
+//	
 	HAL_TIM_Base_Start_IT(&htim21);					//запуск таймера
   /* USER CODE END 2 */
 
