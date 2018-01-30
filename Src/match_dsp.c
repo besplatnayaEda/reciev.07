@@ -46,7 +46,7 @@ extern DMA_HandleTypeDef hdma_tim2_ch1;
 	uint8_t rx_buff_cnt = 0;
 
 
-uint8_t hpt_rept_type;
+
 
 
 	
@@ -55,9 +55,10 @@ uint8_t SoftUart[TXBUFF];
 
 #define TB 40
 uint8_t UartBuffByte[TB];			// start 8data stop 
-	
+
+	uint8_t hpt_rept_type = ENABLE; // тип запроса НРТ
 	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
-	uint8_t IRQ_abort = 0;		// 0 - ждем уарт, 1 - ждем моргание
+	uint8_t IRQ_abort = 1;		// 0 - ждем уарт, 1 - ждем моргание
 	uint8_t en_cnt = 0;				// запуск счета 1 - запущен, 0 - остановлен
 
 SettingParametrs_t SETUP;
@@ -288,6 +289,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 					{
 						blink_ext = 0;
 						HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET); // включение большого света
+					}
+					
+					if(hpt_rept_type == ENABLE)
+					{
+						hpt_rept_cnt = 0;
+						en_cnt = 1;
 					}
 					
 					temp = CAPLAMP_OUT1_GPIO_Port -> MODER;																				  //

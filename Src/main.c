@@ -123,10 +123,9 @@ int main(void)
 
 
 //	HPT_Transmite(CONFIRM);
-hpt_rept_cnt = 0;
-	en_cnt = 1;
-hpt_rept_type =ENABLE;
-IRQ_abort = 0;
+
+
+
 //#ifdef DFS
 //	DefaultSettings();
 //	SaveSetting(&SETUP);
