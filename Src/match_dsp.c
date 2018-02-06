@@ -55,6 +55,16 @@ uint8_t SoftUart[TXBUFF];
 
 #define TB 40
 uint8_t UartBuffByte[TB];			// start 8data stop 
+uint8_t delay[4][8] = {{ 25, 35, 25, 35, 25, 35, 25, 35},					// 0 - 115200
+											 { 50, 70, 50, 70, 50, 70, 50, 70},					// 1 - 57600
+											 { 50,120, 75,120, 75,120, 75,120},					// 2 - 38400
+											 { 30,110, 75,110, 75,110, 75,110}					// 3 - 36000
+											};
+uint8_t br = 2;				
+											
+											
+											
+	
 
 	uint8_t hpt_rept_type = ENABLE; // тип запроса НРТ
 	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
@@ -148,56 +158,79 @@ void S_UART(void)
 	
 	uint16_t j;
 	uint8_t i;
+//	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
+//	Interrupt_OUT2_GPIO_Port->BSRR = Interrupt_OUT2_Pin;
 	
-		for(j = 0; j < 10; j++)						// пауза
+	
+		for(j = 0; j < delay[br][0]; j++)						// пауза				задержка старт бита
 				__nop();
 	
-		for(i = 0; i < 19; i++)
+		for(i = 0; i < 9; i++)											// первый байт
 		{
 				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 
-			for(j = 0; j < 32; j++)						// пауза
+			for(j = 0; j < delay[br][1]; j++)					// пауза
 				__nop();
 
 		}
 		
-		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+		UartBuffByte[9] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 1й байт 
 		
-		for(j = 0; j < 25; j++)						// пауза
+		
+		for(j = 0; j < delay[br][2]; j++)						// пауза				корректировка 
 				__nop();
 		
-		for(i = 20; i < 29; i++)
+		for(i = 10; i < 19; i++)										// второй байт
 		{
 				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 
-			for(j = 0; j < 32; j++)						// пауза
+			for(j = 0; j < delay[br][3]; j++)					// пауза
 				__nop();
 
 		}
 		
-		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 2й байт 
 		
-		for(j = 0; j < 25; j++)						// пауза
+		
+		for(j = 0; j < delay[br][4]; j++)						// пауза				корректировка
 				__nop();
 		
-		for(i = 30; i < TB; i++)
+		for(i = 20; i < 29; i++)										// третий байт
 		{
 				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 
-			for(j = 0; j < 32; j++)						// пауза
+			for(j = 0; j < delay[br][5]; j++)					// пауза
 				__nop();
 
 		}
 		
-		SoftUart[0] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
+		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 3й байт 
+		
+		for(j = 0; j < delay[br][6]; j++)						// пауза				корректировка
+				__nop();
+		
+		for(i = 30; i < 40; i++)										// четвертый байт
+		{
+				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+			for(j = 0; j < delay[br][7]; j++)					// пауза
+				__nop();
+
+		}
+//		Interrupt_OUT2_GPIO_Port->BRR = Interrupt_OUT2_Pin;
+//		HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+		
+		if(!UartBuffByte[0] && UartBuffByte[9] && !UartBuffByte[10] && UartBuffByte[19] && !UartBuffByte[20] && UartBuffByte[29] && !UartBuffByte[30] && UartBuffByte[39])
+		{			
+		SoftUart[0] = UartBuffByte[ 1] | UartBuffByte[ 2]<<1 | UartBuffByte[ 3]<<2 | UartBuffByte[ 4]<<3 | UartBuffByte[ 5]<<4 | UartBuffByte[ 6]<<5 | UartBuffByte[ 7]<<6 | UartBuffByte[ 8]<<7 ;
 		SoftUart[1] = UartBuffByte[11] | UartBuffByte[12]<<1 | UartBuffByte[13]<<2 | UartBuffByte[14]<<3 | UartBuffByte[15]<<4 | UartBuffByte[16]<<5 | UartBuffByte[17]<<6 | UartBuffByte[18]<<7 ;
 		SoftUart[2] = UartBuffByte[21] | UartBuffByte[22]<<1 | UartBuffByte[23]<<2 | UartBuffByte[24]<<3 | UartBuffByte[25]<<4 | UartBuffByte[26]<<5 | UartBuffByte[27]<<6 | UartBuffByte[28]<<7 ;
 		SoftUart[3] = UartBuffByte[31] | UartBuffByte[32]<<1 | UartBuffByte[33]<<2 | UartBuffByte[34]<<3 | UartBuffByte[35]<<4 | UartBuffByte[36]<<5 | UartBuffByte[37]<<6 | UartBuffByte[38]<<7 ;
 		
 		if(SoftUart[0] == 0x12U)
 		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
-
-	IRQ_abort = 1;
+	}
+	IRQ_abort = 0;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
 	SaveSetting(&SETUP);
 	__enable_irq ();
 }
@@ -291,11 +324,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 						HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET); // включение большого света
 					}
 					
-					if(hpt_rept_type == ENABLE)
-					{
-						hpt_rept_cnt = 0;
-						en_cnt = 1;
-					}
+//					if(hpt_rept_type == ENABLE)
+//					{
+//						hpt_rept_cnt = 0;
+//						en_cnt = 1;
+//					}
 					
 					temp = CAPLAMP_OUT1_GPIO_Port -> MODER;																				  //
 					temp &= ~(GPIO_MODER_MODE1 << 0);																								//	перенастройка выхода с таймера на GPIO
@@ -363,40 +396,42 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	void DefaultSettings(void)
 	{
 		SETUP.hpt_name = 61680;	// 1111 0000 1111 0000 43690;			// 1010 1010 1010 1010
-
-		// BR = 2.0
-		SETUP.samplenum = 1600;
+		
 		SETUP.repeatnum = 1;
-		SETUP.f1 = 984;
-		SETUP.f2 = 966;
-		SETUP.BR = 20;
+		
 		SETUP.serailnum	= 0x00000000U;
-		SETUP.firmware	= 0xF097U;
-		 // f =  984 , BR = 2.0
-/*a1*/   SETUP.cf1s1[0] = 0.702541857155492;
-/*a2*/   SETUP.cf1s1[1] = 0.994534406218589;
-/*b1*/   SETUP.cf1s1[2] = 0.071590504732271;
-/*b2*/   SETUP.cf1s1[3] = 0.066341650450648;
-/*b3*/   SETUP.cf1s1[4] = 0.071590504732271;
+		SETUP.firmware	= 0x3117U;
+		
+		SETUP.ratio = 5e-3f;
+		
+		SETUP.f1 = 1025;
+		SETUP.f2 = 1015;
+		SETUP.BR =   20;
+ // f = 1025 , BR = 2.0
+/*a1*/   SETUP.cf1s1[0] = 0.851022195929615;
+/*a2*/   SETUP.cf1s1[1] = 0.994532979119457;
+/*b1*/   SETUP.cf1s1[2] = 0.072308525004472;
+/*b2*/   SETUP.cf1s1[3] = 0.077052881495139;
+/*b3*/   SETUP.cf1s1[4] = 0.072308525004472;
 
-/*a1*/   SETUP.cf1s2[0] = 0.712765626378700;
-/*a2*/   SETUP.cf1s2[1] = 0.994545730434914;
-/*b1*/   SETUP.cf1s2[2] = 0.014814725949727;
-/*b2*/   SETUP.cf1s2[3] = 0.006985641330531;
-/*b3*/   SETUP.cf1s2[4] = 0.014814725949727;
+/*a1*/   SETUP.cf1s2[0] = 0.860901393554830;
+/*a2*/   SETUP.cf1s2[1] = 0.994547157552342;
+/*b1*/   SETUP.cf1s2[2] = 0.015160627875001;
+/*b2*/   SETUP.cf1s2[3] = 0.009485054055582;
+/*b3*/   SETUP.cf1s2[4] = 0.015160627875001;
 
- // f =  966 , BR = 2.0
-/*a1*/   SETUP.cf2s1[0] = 0.635860005955117;
-/*a2*/   SETUP.cf2s1[1] = 0.994535004235001;
-/*b1*/   SETUP.cf2s1[2] = 0.069094363053546;
-/*b2*/   SETUP.cf2s1[3] = 0.059679724517278;
-/*b3*/   SETUP.cf2s1[4] = 0.069094363053546;
+ // f = 1015 , BR = 2.0
+/*a1*/   SETUP.cf2s1[0] = 0.815279528023444;
+/*a2*/   SETUP.cf2s1[1] = 0.994533336545261;
+/*b1*/   SETUP.cf2s1[2] = 0.072438722516149;
+/*b2*/   SETUP.cf2s1[3] = 0.074780562643580;
+/*b3*/   SETUP.cf2s1[4] = 0.072438722516149;
 
-/*a1*/   SETUP.cf2s2[0] = 0.646214193388075;
-/*a2*/   SETUP.cf2s2[1] = 0.994545132412054;
-/*b1*/   SETUP.cf2s2[2] = 0.014722092858333;
-/*b2*/   SETUP.cf2s2[3] = 0.005930783953626;
-/*b3*/   SETUP.cf2s2[4] = 0.014722092858333;
+/*a1*/   SETUP.cf2s2[0] = 0.825248777003602;
+/*a2*/   SETUP.cf2s2[1] = 0.994546800121572;
+/*b1*/   SETUP.cf2s2[2] = 0.015046644461024;
+/*b2*/   SETUP.cf2s2[3] = 0.008853269634262;
+/*b3*/   SETUP.cf2s2[4] = 0.015046644461024;
 
  // flp = 2.00 , BR = 2.0
 /*a1*/   SETUP.cflp[0] = -0.996080699674494;
@@ -405,7 +440,47 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 /*b2*/   SETUP.cflp[3] = 0.001959650162753;
 /*b3*/   SETUP.cflp[4] = 0.000000000000000;
 
-		SETUP.ratio = 5e-3f;
+ // BR = 2.0
+SETUP.samplenum =  1600;
+		
+//		 // f =  984 , BR = 2.0
+//		SETUP.samplenum = 1600;
+//		SETUP.f1 = 984;
+//		SETUP.f2 = 966;
+//		SETUP.BR = 20;
+///*a1*/   SETUP.cf1s1[0] = 0.702541857155492;
+///*a2*/   SETUP.cf1s1[1] = 0.994534406218589;
+///*b1*/   SETUP.cf1s1[2] = 0.071590504732271;
+///*b2*/   SETUP.cf1s1[3] = 0.066341650450648;
+///*b3*/   SETUP.cf1s1[4] = 0.071590504732271;
+
+///*a1*/   SETUP.cf1s2[0] = 0.712765626378700;
+///*a2*/   SETUP.cf1s2[1] = 0.994545730434914;
+///*b1*/   SETUP.cf1s2[2] = 0.014814725949727;
+///*b2*/   SETUP.cf1s2[3] = 0.006985641330531;
+///*b3*/   SETUP.cf1s2[4] = 0.014814725949727;
+
+// // f =  966 , BR = 2.0
+///*a1*/   SETUP.cf2s1[0] = 0.635860005955117;
+///*a2*/   SETUP.cf2s1[1] = 0.994535004235001;
+///*b1*/   SETUP.cf2s1[2] = 0.069094363053546;
+///*b2*/   SETUP.cf2s1[3] = 0.059679724517278;
+///*b3*/   SETUP.cf2s1[4] = 0.069094363053546;
+
+///*a1*/   SETUP.cf2s2[0] = 0.646214193388075;
+///*a2*/   SETUP.cf2s2[1] = 0.994545132412054;
+///*b1*/   SETUP.cf2s2[2] = 0.014722092858333;
+///*b2*/   SETUP.cf2s2[3] = 0.005930783953626;
+///*b3*/   SETUP.cf2s2[4] = 0.014722092858333;
+
+// // flp = 2.00 , BR = 2.0
+///*a1*/   SETUP.cflp[0] = -0.996080699674494;
+///*a2*/   SETUP.cflp[1] = 0.000000000000000;
+///*b1*/   SETUP.cflp[2] = 0.001959650162753;
+///*b2*/   SETUP.cflp[3] = 0.001959650162753;
+///*b3*/   SETUP.cflp[4] = 0.000000000000000;
+
+		
 
 	}
 	
