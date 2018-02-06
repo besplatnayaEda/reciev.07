@@ -140,10 +140,10 @@ int main(void)
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 
 ////	HAL_ADCEx_Calibration_Start(&hadc,1);		// калибровка ацп
-//	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);			// запуск ацп пдп
+	HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);			// запуск ацп пдп
 
 	blink(START);
-IRQ_abort = 0;				// убрать
+//IRQ_abort = 0;				// убрать
 
 //	
 	HAL_TIM_Base_Start_IT(&htim21);					//запуск таймера

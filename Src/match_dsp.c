@@ -55,13 +55,13 @@ uint8_t SoftUart[TXBUFF];
 
 #define TB 40
 uint8_t UartBuffByte[TB];			// start 8data stop 
-uint8_t delay[4][8] = {{ 25, 35, 25, 35, 25, 35, 25, 35},					// 0 - 115200
-											 { 50, 70, 50, 70, 50, 70, 50, 70},					// 1 - 57600
-											 { 50,120, 75,120, 75,120, 75,120},					// 2 - 38400
-											 { 30,110, 75,110, 75,110, 75,110}					// 3 - 36000
-											};
-uint8_t br = 2;				
-											
+//uint8_t delay[4][8] = {{ 25, 35, 25, 35, 25, 35, 25, 35},					// 0 - 115200
+//											 { 50, 70, 50, 70, 50, 70, 50, 70},					// 1 - 57600
+//											 { 50,120, 75,120, 75,120, 75,120},					// 2 - 38400
+//											 { 30,110, 75,110, 75,110, 75,110}					// 3 - 36000
+//											};
+//uint8_t br = 2;				
+//											
 											
 											
 	
@@ -161,59 +161,43 @@ void S_UART(void)
 //	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
 //	Interrupt_OUT2_GPIO_Port->BSRR = Interrupt_OUT2_Pin;
 	
-	
-		for(j = 0; j < delay[br][0]; j++)						// пауза				задержка старт бита
+
+			for(j = 0; j < 30; j++)						// пауза
 				__nop();
 	
-		for(i = 0; i < 9; i++)											// первый байт
+		for(i = 0; i < 19; i++)
 		{
 				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 
-			for(j = 0; j < delay[br][1]; j++)					// пауза
+			for(j = 0; j < 100; j++)						// пауза
 				__nop();
 
 		}
 		
-		UartBuffByte[9] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 1й байт 
+		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 		
-		
-		for(j = 0; j < delay[br][2]; j++)						// пауза				корректировка 
+		for(j = 0; j < 90; j++)						// пауза
 				__nop();
 		
-		for(i = 10; i < 19; i++)										// второй байт
+		for(i = 20; i < 29; i++)
 		{
 				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 
-			for(j = 0; j < delay[br][3]; j++)					// пауза
+			for(j = 0; j < 96; j++)						// пауза
 				__nop();
 
 		}
 		
-		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 2й байт 
+		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 		
-		
-		for(j = 0; j < delay[br][4]; j++)						// пауза				корректировка
+		for(j = 0; j < 75; j++)						// пауза
 				__nop();
 		
-		for(i = 20; i < 29; i++)										// третий байт
+		for(i = 30; i < TB; i++)
 		{
 				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 
-			for(j = 0; j < delay[br][5]; j++)					// пауза
-				__nop();
-
-		}
-		
-		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 3й байт 
-		
-		for(j = 0; j < delay[br][6]; j++)						// пауза				корректировка
-				__nop();
-		
-		for(i = 30; i < 40; i++)										// четвертый байт
-		{
-				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-			for(j = 0; j < delay[br][7]; j++)					// пауза
+			for(j = 0; j < 96; j++)						// пауза
 				__nop();
 
 		}
@@ -229,10 +213,18 @@ void S_UART(void)
 		
 		if(SoftUart[0] == 0x12U)
 		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
-	}
-	IRQ_abort = 0;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
-	SaveSetting(&SETUP);
-	__enable_irq ();
+		SaveSetting(&SETUP);
+		IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
+		__enable_irq ();
+		}
+		else
+		{
+			__enable_irq ();
+			HPT_Transmite(REQUEST);
+		}
+	
+	
+//	__enable_irq ();
 }
 
 
@@ -690,3 +682,62 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 		
 	}
+	
+	
+		
+//		for(j = 0; j < delay[br][0]; j++)						// пауза				задержка старт бита
+//				__nop();
+//	
+//		for(i = 0; i < 9; i++)											// первый байт
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < delay[br][1]; j++)					// пауза
+//				__nop();
+
+//		}
+//		
+//		UartBuffByte[9] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 1й байт 
+//		
+//		
+//		for(j = 0; j < delay[br][2]; j++)						// пауза				корректировка 
+//				__nop();
+//		
+//		for(i = 10; i < 19; i++)										// второй байт
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < delay[br][3]; j++)					// пауза
+//				__nop();
+
+//		}
+//		
+//		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 2й байт 
+//		
+//		
+//		for(j = 0; j < delay[br][4]; j++)						// пауза				корректировка
+//				__nop();
+//		
+//		for(i = 20; i < 29; i++)										// третий байт
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < delay[br][5]; j++)					// пауза
+//				__nop();
+
+//		}
+//		
+//		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 3й байт 
+//		
+//		for(j = 0; j < delay[br][6]; j++)						// пауза				корректировка
+//				__nop();
+//		
+//		for(i = 30; i < 40; i++)										// четвертый байт
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < delay[br][7]; j++)					// пауза
+//				__nop();
+
+//		}
+//		
