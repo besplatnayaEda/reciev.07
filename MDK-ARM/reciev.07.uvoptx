@@ -100,6 +100,7 @@
         <tRSysVw>1</tRSysVw>
         <sRunDeb>0</sRunDeb>
         <sLrtime>0</sLrtime>
+        <bEvRecOn>1</bEvRecOn>
         <nTsel>5</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
@@ -142,142 +143,142 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
-          <Name>-U0677FF525056805087054755 -O2287 -S0 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(0BC11477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8004 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO14 -FD20000000 -FC800 -FN1 -FF0STM32L0xx_16.FLM -FS08000000 -FL04000 -FP0($$Device:STM32L011D4$Flash\STM32L0xx_16.FLM)</Name>
+          <Name>-U38FF71064B46373137251043 -O2287 -S0 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(0BC11477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8004 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC800 -FN1 -FF0STM32L0xx_16.FLM -FS08000000 -FL04000 -FP0($$Device:STM32L011D4$Flash\STM32L0xx_16.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
       <Breakpoint>
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>1408</LineNumber>
+          <LineNumber>546</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134227952</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_lptim.c</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\546</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>269</LineNumber>
+          <LineNumber>539</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134228120</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
+          <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\539</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>356</LineNumber>
+          <LineNumber>538</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134227956</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
+          <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\538</Expression>
         </Bp>
         <Bp>
           <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>528</LineNumber>
+          <LineNumber>531</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134228100</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
+          <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\531</Expression>
         </Bp>
         <Bp>
           <Number>4</Number>
           <Type>0</Type>
-          <LineNumber>247</LineNumber>
+          <LineNumber>366</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134228488</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Src/stm32l0xx_it.c</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\366</Expression>
         </Bp>
         <Bp>
           <Number>5</Number>
           <Type>0</Type>
-          <LineNumber>254</LineNumber>
+          <LineNumber>271</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134229896</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Src/stm32l0xx_it.c</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\271</Expression>
         </Bp>
         <Bp>
           <Number>6</Number>
           <Type>0</Type>
-          <LineNumber>260</LineNumber>
+          <LineNumber>365</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134228484</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Src/stm32l0xx_it.c</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\365</Expression>
         </Bp>
         <Bp>
           <Number>7</Number>
           <Type>0</Type>
-          <LineNumber>280</LineNumber>
+          <LineNumber>270</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134229894</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
+          <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\270</Expression>
         </Bp>
         <Bp>
           <Number>8</Number>
           <Type>0</Type>
-          <LineNumber>364</LineNumber>
+          <LineNumber>282</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -293,7 +294,7 @@
         <Bp>
           <Number>9</Number>
           <Type>0</Type>
-          <LineNumber>536</LineNumber>
+          <LineNumber>283</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -309,7 +310,7 @@
         <Bp>
           <Number>10</Number>
           <Type>0</Type>
-          <LineNumber>246</LineNumber>
+          <LineNumber>358</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -318,126 +319,14 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Src/stm32l0xx_it.c</Filename>
+          <Filename>..\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression></Expression>
         </Bp>
         <Bp>
           <Number>11</Number>
           <Type>0</Type>
-          <LineNumber>253</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Src/stm32l0xx_it.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>12</Number>
-          <Type>0</Type>
-          <LineNumber>259</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>../Src/stm32l0xx_it.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>13</Number>
-          <Type>0</Type>
-          <LineNumber>270</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>14</Number>
-          <Type>0</Type>
-          <LineNumber>281</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>15</Number>
-          <Type>0</Type>
-          <LineNumber>363</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>16</Number>
-          <Type>0</Type>
-          <LineNumber>371</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>17</Number>
-          <Type>0</Type>
-          <LineNumber>535</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>18</Number>
-          <Type>0</Type>
-          <LineNumber>543</LineNumber>
+          <LineNumber>373</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -641,24 +530,8 @@
       <Lin2Executable></Lin2Executable>
       <Lin2ConfigFile></Lin2ConfigFile>
       <bLin2Auto>0</bLin2Auto>
-      <SystemViewers>
-        <Entry>
-          <Name>System Viewer\GPIOA</Name>
-          <WinId>35905</WinId>
-        </Entry>
-        <Entry>
-          <Name>System Viewer\GPIOC</Name>
-          <WinId>35903</WinId>
-        </Entry>
-        <Entry>
-          <Name>System Viewer\LPTIM</Name>
-          <WinId>35902</WinId>
-        </Entry>
-        <Entry>
-          <Name>System Viewer\USART2</Name>
-          <WinId>35904</WinId>
-        </Entry>
-      </SystemViewers>
+      <bAutoGenD>0</bAutoGenD>
+      <bAuto2GenD>0</bAuto2GenD>
     </TargetOption>
   </Target>
 
@@ -800,7 +673,7 @@
 
   <Group>
     <GroupName>Drivers/STM32L0xx_HAL_Driver</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
