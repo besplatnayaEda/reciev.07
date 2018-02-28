@@ -37,6 +37,7 @@ uint8_t blink_8sec;				// количество 8-ми секундных ожиданий
 uint16_t blink_ext;				// внешний импульс
 uint8_t blink_trg;	
 extern DMA_HandleTypeDef hdma_tim2_ch1;
+extern uint32_t buff1;
 
 	
 	
@@ -71,15 +72,16 @@ uint8_t UartBuffByte[TB];			// start 8data stop
 	uint8_t IRQ_abort = 1;		// 0 - ждем уарт, 1 - ждем моргание
 	uint8_t en_cnt = 0;				// запуск счета 1 - запущен, 0 - остановлен
 
+
+SoftUART_15Baud_t SUART;
 SettingParametrs_t SETUP;
 UART2Recv_t UART2_RecvType;
-UART2_Queue_Data UART2_Trans_Data;
+
 
 Cmd_Type CMD;
 Cmd_Type CMD_Rept;
 
 extern UART_HandleTypeDef huart2;
-extern LPTIM_HandleTypeDef hlptim1;
 
 // режим моргания 
 void blink(char mode)
@@ -154,78 +156,125 @@ float IIR_SOS(float in, float *coef, float *his)
 }
 void S_UART(void)
 {
-	__disable_irq();
-	
-	uint16_t j;
-	uint8_t i;
-//	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
-//	Interrupt_OUT2_GPIO_Port->BSRR = Interrupt_OUT2_Pin;
-	
-
-			for(j = 0; j < 30; j++)						// пауза
-				__nop();
-	
-		for(i = 0; i < 19; i++)
-		{
-				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-			for(j = 0; j < 100; j++)						// пауза
-				__nop();
-
-		}
-		
-		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-		
-		for(j = 0; j < 90; j++)						// пауза
-				__nop();
-		
-		for(i = 20; i < 29; i++)
-		{
-				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-			for(j = 0; j < 96; j++)						// пауза
-				__nop();
-
-		}
-		
-		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-		
-		for(j = 0; j < 75; j++)						// пауза
-				__nop();
-		
-		for(i = 30; i < TB; i++)
-		{
-				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-			for(j = 0; j < 96; j++)						// пауза
-				__nop();
-
-		}
-//		Interrupt_OUT2_GPIO_Port->BRR = Interrupt_OUT2_Pin;
-//		HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
-		
-		if(!UartBuffByte[0] && UartBuffByte[9] && !UartBuffByte[10] && UartBuffByte[19] && !UartBuffByte[20] && UartBuffByte[29] && !UartBuffByte[30] && UartBuffByte[39])
+	if(SUART.rx_cnt == 0)
+	{
+		if(SUART.tim_cnt == 105)
+			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+			SUART.rx_cnt++;
+	}
+	else if(SUART.rx_cnt < 40)
+	{
+		if(SUART.tim_cnt == 210)
+			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+			SUART.rx_cnt++;
+	}
+	else
+	{
+		if(!SUART.rx_buff[0] && SUART.rx_buff[9] && !SUART.rx_buff[10] && SUART.rx_buff[19] && !SUART.rx_buff[20] && SUART.rx_buff[29] && !SUART.rx_buff[30] && SUART.rx_buff[39])
 		{			
-		SoftUart[0] = UartBuffByte[ 1] | UartBuffByte[ 2]<<1 | UartBuffByte[ 3]<<2 | UartBuffByte[ 4]<<3 | UartBuffByte[ 5]<<4 | UartBuffByte[ 6]<<5 | UartBuffByte[ 7]<<6 | UartBuffByte[ 8]<<7 ;
-		SoftUart[1] = UartBuffByte[11] | UartBuffByte[12]<<1 | UartBuffByte[13]<<2 | UartBuffByte[14]<<3 | UartBuffByte[15]<<4 | UartBuffByte[16]<<5 | UartBuffByte[17]<<6 | UartBuffByte[18]<<7 ;
-		SoftUart[2] = UartBuffByte[21] | UartBuffByte[22]<<1 | UartBuffByte[23]<<2 | UartBuffByte[24]<<3 | UartBuffByte[25]<<4 | UartBuffByte[26]<<5 | UartBuffByte[27]<<6 | UartBuffByte[28]<<7 ;
-		SoftUart[3] = UartBuffByte[31] | UartBuffByte[32]<<1 | UartBuffByte[33]<<2 | UartBuffByte[34]<<3 | UartBuffByte[35]<<4 | UartBuffByte[36]<<5 | UartBuffByte[37]<<6 | UartBuffByte[38]<<7 ;
+		SUART.rx_data[0] = SUART.rx_buff[ 1] | SUART.rx_buff[ 2]<<1 | SUART.rx_buff[ 3]<<2 | SUART.rx_buff[ 4]<<3 | SUART.rx_buff[ 5]<<4 | SUART.rx_buff[ 6]<<5 | SUART.rx_buff[ 7]<<6 | SUART.rx_buff[ 8]<<7 ;
+		SUART.rx_data[1] = SUART.rx_buff[11] | SUART.rx_buff[12]<<1 | SUART.rx_buff[13]<<2 | SUART.rx_buff[14]<<3 | SUART.rx_buff[15]<<4 | SUART.rx_buff[16]<<5 | SUART.rx_buff[17]<<6 | SUART.rx_buff[18]<<7 ;
+		SUART.rx_data[2] = SUART.rx_buff[21] | SUART.rx_buff[22]<<1 | SUART.rx_buff[23]<<2 | SUART.rx_buff[24]<<3 | SUART.rx_buff[25]<<4 | SUART.rx_buff[26]<<5 | SUART.rx_buff[27]<<6 | SUART.rx_buff[28]<<7 ;
+		SUART.rx_data[3] = SUART.rx_buff[31] | SUART.rx_buff[32]<<1 | SUART.rx_buff[33]<<2 | SUART.rx_buff[34]<<3 | SUART.rx_buff[35]<<4 | SUART.rx_buff[36]<<5 | SUART.rx_buff[37]<<6 | SUART.rx_buff[38]<<7 ;
 		
-		if(SoftUart[0] == 0x12U)
-		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
-		SaveSetting(&SETUP);
-		IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
-		__enable_irq ();
+		if(SUART.rx_data[0] == 0x12U)
+		{
+			SETUP.hpt_name = (SUART.rx_data[1] << 8) | SUART.rx_data[2];			// проверить порядок байт
+			SaveSetting(&SETUP);
+			IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
+			SUART.tim_en = 0;
+			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 		}
 		else
-		{
-			__enable_irq ();
 			HPT_Transmite(REQUEST);
 		}
+	}
 	
+	if(SUART.tim_en)
+		SUART.tim_cnt++;
+	
+//	__disable_irq();
+//	
+//	uint16_t j;
+//	uint8_t i;
+////	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
+////	Interrupt_OUT2_GPIO_Port->BSRR = Interrupt_OUT2_Pin;
+//	
+
+//			for(j = 0; j < 30; j++)						// пауза
+//				__nop();
+//	
+//		for(i = 0; i < 19; i++)
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < 100; j++)						// пауза
+//				__nop();
+
+//		}
+//		
+//		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+//		
+//		for(j = 0; j < 90; j++)						// пауза
+//				__nop();
+//		
+//		for(i = 20; i < 29; i++)
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < 96; j++)						// пауза
+//				__nop();
+
+//		}
+//		
+//		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+//		
+//		for(j = 0; j < 75; j++)						// пауза
+//				__nop();
+//		
+//		for(i = 30; i < TB; i++)
+//		{
+//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+
+//			for(j = 0; j < 96; j++)						// пауза
+//				__nop();
+
+//		}
+////		Interrupt_OUT2_GPIO_Port->BRR = Interrupt_OUT2_Pin;
+////		HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
+//		
+//		if(!UartBuffByte[0] && UartBuffByte[9] && !UartBuffByte[10] && UartBuffByte[19] && !UartBuffByte[20] && UartBuffByte[29] && !UartBuffByte[30] && UartBuffByte[39])
+//		{			
+//		SoftUart[0] = UartBuffByte[ 1] | UartBuffByte[ 2]<<1 | UartBuffByte[ 3]<<2 | UartBuffByte[ 4]<<3 | UartBuffByte[ 5]<<4 | UartBuffByte[ 6]<<5 | UartBuffByte[ 7]<<6 | UartBuffByte[ 8]<<7 ;
+//		SoftUart[1] = UartBuffByte[11] | UartBuffByte[12]<<1 | UartBuffByte[13]<<2 | UartBuffByte[14]<<3 | UartBuffByte[15]<<4 | UartBuffByte[16]<<5 | UartBuffByte[17]<<6 | UartBuffByte[18]<<7 ;
+//		SoftUart[2] = UartBuffByte[21] | UartBuffByte[22]<<1 | UartBuffByte[23]<<2 | UartBuffByte[24]<<3 | UartBuffByte[25]<<4 | UartBuffByte[26]<<5 | UartBuffByte[27]<<6 | UartBuffByte[28]<<7 ;
+//		SoftUart[3] = UartBuffByte[31] | UartBuffByte[32]<<1 | UartBuffByte[33]<<2 | UartBuffByte[34]<<3 | UartBuffByte[35]<<4 | UartBuffByte[36]<<5 | UartBuffByte[37]<<6 | UartBuffByte[38]<<7 ;
+//		
+//		if(SoftUart[0] == 0x12U)
+//		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
+//		SaveSetting(&SETUP);
+//		IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
+//		__enable_irq ();
+//		}
+//		else
+//		{
+//			__enable_irq ();
+//			HPT_Transmite(REQUEST);
+//		}
+//	
 	
 //	__enable_irq ();
 }
+
+void StartSUART(void)
+{
+	SUART.tim_en = 1;
+	SUART.tim_cnt = 0;
+	SUART.rx_cnt = 0;
+	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
+}
+
+
 
 
 // сейчас передача идет старшим вперед databuff[0] - старший
@@ -272,6 +321,7 @@ void SaveSetting(SettingParametrs_t *Settings)
   }
 	
 
+
 	
 	for (uint32_t i = 0; i < SETTING_WORDS; i++) {
     HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)flash_addr, *(uint32_t *)settings_addr);
@@ -308,8 +358,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					if(!IRQ_abort)
 //						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
-						S_UART();
-
+//						S_UART();
+							StartSUART();
+					
 					if(IRQ_abort)
 					{
 						blink_ext = 0;
@@ -482,6 +533,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if (UART2_RECV_CMD == UART2_RecvType)
 		{
 				HAL_TIM_Base_Stop_IT(&htim21);
+			HAL_ADC_Stop_DMA(&hadc);
 			
 		switch(CMD)
 		{
@@ -502,7 +554,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&SETUP.samplenum,sizeof(SETUP.samplenum));
 				break;
 			case SET_F1S1:								// частота 1 секция 1
-				HAL_TIM_Base_Stop_IT(&htim21);
+				//HAL_TIM_Base_Stop_IT(&htim21);
 				UART2_RecvType = UART2_RECV_VALUE;
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&SETUP.cf1s1,sizeof(SETUP.cf1s1));
 				break;
@@ -546,30 +598,35 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				UART2_RecvType = UART2_RECV_CMD;
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case START_DTR_F1:				// запуск передачи данных
 				UART2_RecvType = UART2_RECV_CMD;
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case START_DTR_F2:				// запуск передачи данных
 				UART2_RecvType = UART2_RECV_CMD;
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case START_DTR_IN:				// запуск передачи данных
 				UART2_RecvType = UART2_RECV_CMD;
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case STOP_DTR:					// остановка передачи данных
 				UART2_RecvType = UART2_RECV_CMD;
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_SETUP:				// отправить структуру
@@ -577,6 +634,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP,sizeof(SETUP));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_F1:					// отправить частоту 1
@@ -584,6 +642,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.f1,sizeof(SETUP.f1));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_F2:					// отправить частоту 2
@@ -591,6 +650,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.f2,sizeof(SETUP.f2));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_BR:					// отправить бодрейт
@@ -598,6 +658,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.BR,sizeof(SETUP.BR));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_DET_THRES:					// отправить бодрейт
@@ -605,6 +666,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.ratio,sizeof(SETUP.ratio));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_NAME_HPT:		// отправить номер HPT
@@ -612,6 +674,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.hpt_name,sizeof(SETUP.hpt_name));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_SN:		// отправить серийный номер
@@ -619,6 +682,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.serailnum,sizeof(SETUP.serailnum));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_FW:		// отправить версию ПО
@@ -626,6 +690,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.firmware,sizeof(SETUP.firmware));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_LAST_CALL:		// отправить последний принятый номер HPT
@@ -633,6 +698,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.hpt_name,sizeof(SETUP.hpt_name));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case GET_LAST_CALL_TYPE:		// отправить последний тип вызова 
@@ -640,6 +706,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&SETUP.hpt_name,sizeof(SETUP.hpt_name));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case DEF_SETT:								// отправить ответ на запрос подключения
@@ -648,6 +715,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				SaveSetting(&SETUP);
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			case CONNECT:								// отправить ответ на запрос подключения
@@ -656,6 +724,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&CMD_Rept,sizeof(CMD_Rept));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 			
@@ -666,14 +735,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&CMD_Rept,sizeof(CMD_Rept));
 				if(!(TIM21->CR1))
 					HAL_TIM_Base_Start_IT(&htim21);
+				HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				HAL_UART_Receive_IT(&huart2, (uint8_t *)&CMD,sizeof(CMD));
 				break;
 		}}
 		else{
-			
+			//__disable_irq();
 			SaveSetting(&SETUP);
+			//__enable_irq();
 			blink(OK_SET);
-			
+			HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 			if(!(TIM21->CR1))
 				HAL_TIM_Base_Start_IT(&htim21);
 		

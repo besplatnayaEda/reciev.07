@@ -101,26 +101,14 @@ typedef struct SettingParametrs {
 	
 } SettingParametrs_t, *pSettingParametrs_t;
 
+typedef struct SoftUART_15Baud	{
+	uint8_t	tim_en;
+	uint8_t	tim_cnt;
+	uint8_t	rx_cnt;
+	uint8_t rx_buff[40];
+	uint8_t	rx_data[4];
 
-typedef union {
-    uint32_t u32;
-    uint16_t u16;
-    uint8_t u8;
-    int32_t i32;
-    int16_t i16;
-    int8_t i8;
-    int i;
-    float f;
-} Queue_Object_Data_Value;
-
-#pragma pack(push, 1)
-typedef struct {
-  // команда
-  Cmd_Type cmd;
-  // данные
-  Queue_Object_Data_Value value;
-} UART2_Queue_Data;
-#pragma pack(pop)
+}SoftUART_15Baud_t, *pSoftUART_15Baud_t;
 
 float IIR_SOS(float in, float *coef, float *his);
 
@@ -134,6 +122,9 @@ void LoadSetting(SettingParametrs_t *Settings);
 
 void HPT_Transmite(uint8_t type);			// ответ HPT метке
 void S_UART(void);
+
+void StartSUART(void);
+
 
 uint16_t dataBuff(uint8_t data);
 

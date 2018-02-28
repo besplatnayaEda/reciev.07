@@ -110,7 +110,7 @@ extern _Bool trg_pin;
 extern float history11[], history12[], history21[], history22[], historyl[];
 extern SettingParametrs_t SETUP;
 extern Cmd_Type CMD;
-extern UART2_Queue_Data UART2_Trans_Data;
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -218,63 +218,6 @@ void DMA1_Channel4_5_6_7_IRQHandler(void)
   /* USER CODE END DMA1_Channel4_5_6_7_IRQn 1 */
 }
 
-/**
-* @brief This function handles LPTIM1 global interrupt / LPTIM1 wake-up interrupt through EXTI line 29.
-*/
-//void LPTIM1_IRQHandler(void)
-//{
-//	if(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARRM) != RESET)
-//  {
-//    if(__HAL_LPTIM_GET_IT_SOURCE(&hlptim1, LPTIM_IT_ARRM) !=RESET)
-//    {
-//      // Clear Autoreload match flag 
-//      __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
-
-//  /* USER CODE BEGIN LPTIM1_IRQn 0 */
-//	if(External_IN_GPIO_Port->IDR & External_IN_Pin)		// если после срабатывания таймера "1"
-//	{
-
-//		UartBuffByte[rx_buff_cnt] = 0;
-//		rx_buff_cnt++;
-//		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
-//			HAL_LPTIM_Counter_Start_IT(&hlptim1,780);		//170 35000 кбод
-//	}
-//	else
-//	{
-//		
-//		UartBuffByte[rx_buff_cnt] = 1;
-//		rx_buff_cnt++;
-//		
-//		if((rx_buff_cnt != 0)&&(rx_buff_cnt != 10))
-//			HAL_LPTIM_Counter_Start_IT(&hlptim1,780); //170 35000 кбод
-//	}
-//	
-//	if(rx_buff_cnt == 10)
-//	{
-//		if((UartBuffByte[0] == 0)&&(UartBuffByte[9] == 1))
-//		{
-//			SoftUart[bite_cnt] = UartBuffByte[1] | UartBuffByte[2]<<1 | UartBuffByte[3]<<2 | UartBuffByte[4]<<3 | UartBuffByte[5]<<4 | UartBuffByte[6]<<5 | UartBuffByte[7]<<6 | UartBuffByte[8]<<7 ;
-//			bite_cnt++;
-//			if(bite_cnt == TXBUFF)
-//				if(SoftUart[0] == 0x12U)
-//				{
-//					bcc = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
-//					bite_cnt = 0;
-//				}
-//		}
-//		else
-//			memset(UartBuffByte,0,sizeof(UartBuffByte));
-//		rx_buff_cnt = 0;
-
-//		HAL_LPTIM_Counter_Stop_IT(&hlptim1);
-
-//	}
-//  /* USER CODE END LPTIM1_IRQn 0 */
-////  HAL_LPTIM_IRQHandler(&hlptim1);
-//  /* USER CODE BEGIN LPTIM1_IRQn 1 */
-
-//  /* USER CODE END LPTIM1_IRQn 1 */
-//}}}
 
 /**
 * @brief This function handles TIM2 global interrupt.
@@ -335,28 +278,23 @@ void TIM21_IRQHandler(void)
 					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
 				}
 				break;
-			case 1280: //1264:		// запрос		
-					if(hpt_rept_type == REQUEST)
-						HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
-				break;
-			case 1300: //1280:		// запрос
+			case 1264: //1264:		// запрос		
 				if(hpt_rept_type == REQUEST)
 				{
+					HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
 					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
 					IRQ_abort = 0;
-//					rx_buff_cnt = 0;
 				}
 				break;
-			case 1600:		// запрос
+			case 8500:		// запрос
 				if(hpt_rept_type == REQUEST)
 				{
 					IRQ_abort = 1;
-//					rx_buff_cnt = 0;
 					en_cnt = 0;
-					HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
+//					HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				}
 				break;
-			case 2000: //1888:		// проверка
+			case 1888: //1888:		// проверка
 				if(hpt_rept_type == TEST)
 				{
 					HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_RESET);
@@ -364,13 +302,18 @@ void TIM21_IRQHandler(void)
 					HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);						// включение прерываний по входу НРТ
 				}
 				break;
-			case 32000:		// проверка
+			case 32000:		// запрос при включении
 				if(hpt_rept_type == ENABLE)
 					HPT_Transmite(REQUEST);
 				break;
 		}
 		hpt_rept_cnt++;
+		
+		if(!IRQ_abort)
+			S_UART();
 	}
+	
+	
 	
 //	if(!blink_trg)
 //	{
