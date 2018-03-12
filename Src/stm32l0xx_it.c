@@ -57,8 +57,6 @@ extern uint32_t buff1;	// буфер
 static float retf11,retf12,retf21,retf22,retfl, buff0, buffl0;	// фильтры
 
 
-
-
 static uint8_t numbit = 0;
 
 static uint16_t j, bin;//, binx;
@@ -77,13 +75,8 @@ extern	uint8_t en_cnt;
 extern 	uint8_t IRQ_abort;
 
 
-uint16_t bcc;
-
-uint8_t bite_cnt = 0;
-
 
 extern	uint8_t databuff[];
-extern	uint8_t SoftUart[];
 
 
 extern uint8_t blink_type;
@@ -105,7 +98,6 @@ _Bool numbn[N];
 
 static uint8_t  nop = 0;
 
-extern _Bool trg_pin;
 
 extern float history11[], history12[], history21[], history22[], historyl[];
 extern SettingParametrs_t SETUP;
@@ -151,15 +143,15 @@ void SysTick_Handler(void)
 /**
 * @brief This function handles RCC global interrupt.
 */
-//void RCC_IRQHandler(void)
-//{
+void RCC_IRQHandler(void)
+{
   /* USER CODE BEGIN RCC_IRQn 0 */
 
   /* USER CODE END RCC_IRQn 0 */
   /* USER CODE BEGIN RCC_IRQn 1 */
 
   /* USER CODE END RCC_IRQn 1 */
-//}
+}
 
 /**
 * @brief This function handles EXTI line 4 to 15 interrupts.
@@ -286,12 +278,11 @@ void TIM21_IRQHandler(void)
 					IRQ_abort = 0;
 				}
 				break;
-			case 8500:		// запрос
+			case 18500:		// запрос
 				if(hpt_rept_type == REQUEST)
 				{
 					IRQ_abort = 1;
 					en_cnt = 0;
-//					HAL_ADC_Start_DMA(&hadc, (uint32_t*)&buff1,1);
 				}
 				break;
 			case 1888: //1888:		// проверка

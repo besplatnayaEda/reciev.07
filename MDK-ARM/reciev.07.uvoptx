@@ -142,44 +142,28 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
-          <Name>-U38FF71064B46373137251043 -O2287 -S0 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(0BC11477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8004 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC800 -FN1 -FF0STM32L0xx_16.FLM -FS08000000 -FL04000 -FP0($$Device:STM32L011D4$Flash\STM32L0xx_16.FLM)</Name>
+          <Name>-U38FF71064B46373137251043 -O2287 -S0 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(0BC11477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8004 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC800 -FN2 -FF0STM32L0xx_16.FLM -FS08000000 -FL04000 -FP0($$Device:STM32L011D4$Flash\STM32L0xx_16.FLM) -FF1STM32L01_2x_EEPROM.FLM -FS18080000 -FL1200 -FP1($$Device:STM32L011D4$Flash\STM32L01_2x_EEPROM.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
       <Breakpoint>
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>269</LineNumber>
+          <LineNumber>161</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
+          <Address>134229400</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>C:\Users\KAArtemev\Desktop\РџСЂРѕС€РёРІРєРё\РџСЂРёРµРјРЅРёРє\reciev.07\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\161</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>270</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
           <Type>0</Type>
           <LineNumber>280</LineNumber>
           <EnabledFlag>0</EnabledFlag>
@@ -195,9 +179,25 @@
           <Expression></Expression>
         </Bp>
         <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>291</LineNumber>
+          <EnabledFlag>0</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>..\Src\match_dsp.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
           <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>281</LineNumber>
+          <LineNumber>292</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -213,7 +213,7 @@
         <Bp>
           <Number>4</Number>
           <Type>0</Type>
-          <LineNumber>356</LineNumber>
+          <LineNumber>367</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -229,7 +229,7 @@
         <Bp>
           <Number>5</Number>
           <Type>0</Type>
-          <LineNumber>363</LineNumber>
+          <LineNumber>374</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -245,7 +245,7 @@
         <Bp>
           <Number>6</Number>
           <Type>0</Type>
-          <LineNumber>364</LineNumber>
+          <LineNumber>382</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -261,7 +261,7 @@
         <Bp>
           <Number>7</Number>
           <Type>0</Type>
-          <LineNumber>371</LineNumber>
+          <LineNumber>539</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -277,7 +277,7 @@
         <Bp>
           <Number>8</Number>
           <Type>0</Type>
-          <LineNumber>528</LineNumber>
+          <LineNumber>546</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -293,7 +293,7 @@
         <Bp>
           <Number>9</Number>
           <Type>0</Type>
-          <LineNumber>535</LineNumber>
+          <LineNumber>547</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -309,23 +309,7 @@
         <Bp>
           <Number>10</Number>
           <Type>0</Type>
-          <LineNumber>536</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>11</Number>
-          <Type>0</Type>
-          <LineNumber>543</LineNumber>
+          <LineNumber>554</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -484,6 +468,26 @@
           <count>28</count>
           <WinNumber>1</WinNumber>
           <ItemText>SoftUart,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>29</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>SUART,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>30</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>hpt_rept_type</ItemText>
+        </Ww>
+        <Ww>
+          <count>31</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>en_cnt</ItemText>
+        </Ww>
+        <Ww>
+          <count>32</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>hpt_rept_cnt,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>

@@ -21,7 +21,6 @@ uint8_t alarm[] = {1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0};
 													//			a1					a2					b0					b1						b2
 
 
-
 const uint32_t pdat0[]		= {0,125,125,125,0};	// старт
 const uint32_t pdat2[]		= {0,250,125,250,0}; // прошивка
 
@@ -35,37 +34,13 @@ _Bool blink_end = 0;
 uint8_t blink_type = 0;		// тип моргания
 uint8_t blink_8sec;				// количество 8-ми секундных ожиданий
 uint16_t blink_ext;				// внешний импульс
-uint8_t blink_trg;	
+uint8_t blink_trg;
+	
 extern DMA_HandleTypeDef hdma_tim2_ch1;
 extern uint32_t buff1;
-
 	
-	
-	
-	uint8_t hpt_rept = 0;		
-
-	uint8_t rx_buff_cnt = 0;
-
-
-
-
-
 	
 uint8_t databuff[DATALEN];
-uint8_t SoftUart[TXBUFF];
-
-#define TB 40
-uint8_t UartBuffByte[TB];			// start 8data stop 
-//uint8_t delay[4][8] = {{ 25, 35, 25, 35, 25, 35, 25, 35},					// 0 - 115200
-//											 { 50, 70, 50, 70, 50, 70, 50, 70},					// 1 - 57600
-//											 { 50,120, 75,120, 75,120, 75,120},					// 2 - 38400
-//											 { 30,110, 75,110, 75,110, 75,110}					// 3 - 36000
-//											};
-//uint8_t br = 2;				
-//											
-											
-											
-	
 
 	uint8_t hpt_rept_type = ENABLE; // тип запроса НРТ
 	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
@@ -76,7 +51,6 @@ uint8_t UartBuffByte[TB];			// start 8data stop
 SoftUART_15Baud_t SUART;
 SettingParametrs_t SETUP;
 UART2Recv_t UART2_RecvType;
-
 
 Cmd_Type CMD;
 Cmd_Type CMD_Rept;
@@ -158,112 +132,56 @@ void S_UART(void)
 {
 	if(SUART.rx_cnt == 0)
 	{
+
 		if(SUART.tim_cnt == 105)
+		{
 			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 			SUART.rx_cnt++;
+			SUART.tim_cnt = 0;
+		}
 	}
-	else if(SUART.rx_cnt < 40)
+	else if(SUART.rx_cnt < 30)
 	{
 		if(SUART.tim_cnt == 210)
+		{
 			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
 			SUART.rx_cnt++;
+			SUART.tim_cnt = 0;
+		}
 	}
-	else
+	else if(SUART.rx_cnt == 30)
 	{
-		if(!SUART.rx_buff[0] && SUART.rx_buff[9] && !SUART.rx_buff[10] && SUART.rx_buff[19] && !SUART.rx_buff[20] && SUART.rx_buff[29] && !SUART.rx_buff[30] && SUART.rx_buff[39])
+			IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
+			SUART.tim_en = 0;
+			SUART.tim_cnt = 0;
+			SUART.rx_cnt = 0;
+			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+
+		if(!SUART.rx_buff[0] && SUART.rx_buff[9] && !SUART.rx_buff[10] && SUART.rx_buff[19] && !SUART.rx_buff[20] && SUART.rx_buff[29])
 		{			
 		SUART.rx_data[0] = SUART.rx_buff[ 1] | SUART.rx_buff[ 2]<<1 | SUART.rx_buff[ 3]<<2 | SUART.rx_buff[ 4]<<3 | SUART.rx_buff[ 5]<<4 | SUART.rx_buff[ 6]<<5 | SUART.rx_buff[ 7]<<6 | SUART.rx_buff[ 8]<<7 ;
 		SUART.rx_data[1] = SUART.rx_buff[11] | SUART.rx_buff[12]<<1 | SUART.rx_buff[13]<<2 | SUART.rx_buff[14]<<3 | SUART.rx_buff[15]<<4 | SUART.rx_buff[16]<<5 | SUART.rx_buff[17]<<6 | SUART.rx_buff[18]<<7 ;
 		SUART.rx_data[2] = SUART.rx_buff[21] | SUART.rx_buff[22]<<1 | SUART.rx_buff[23]<<2 | SUART.rx_buff[24]<<3 | SUART.rx_buff[25]<<4 | SUART.rx_buff[26]<<5 | SUART.rx_buff[27]<<6 | SUART.rx_buff[28]<<7 ;
-		SUART.rx_data[3] = SUART.rx_buff[31] | SUART.rx_buff[32]<<1 | SUART.rx_buff[33]<<2 | SUART.rx_buff[34]<<3 | SUART.rx_buff[35]<<4 | SUART.rx_buff[36]<<5 | SUART.rx_buff[37]<<6 | SUART.rx_buff[38]<<7 ;
 		
-		if(SUART.rx_data[0] == 0x12U)
-		{
-			SETUP.hpt_name = (SUART.rx_data[1] << 8) | SUART.rx_data[2];			// проверить порядок байт
+		if(SETUP.hpt_name != ((SUART.rx_data[1] << 8) | (SUART.rx_data[2]))){
+			SETUP.hpt_name = (SUART.rx_data[1] << 8) | SUART.rx_data[2];			
 			SaveSetting(&SETUP);
-			IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
-			SUART.tim_en = 0;
-			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+			blink(OK_SET);
+			SUART.err_cnt = 0;
+		}
 		}
 		else
+		{
+			SUART.err_cnt++;
+			if(SUART.err_cnt < 10)
 			HPT_Transmite(REQUEST);
 		}
+		
 	}
 	
 	if(SUART.tim_en)
 		SUART.tim_cnt++;
 	
-//	__disable_irq();
-//	
-//	uint16_t j;
-//	uint8_t i;
-////	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_SET);
-////	Interrupt_OUT2_GPIO_Port->BSRR = Interrupt_OUT2_Pin;
-//	
-
-//			for(j = 0; j < 30; j++)						// пауза
-//				__nop();
-//	
-//		for(i = 0; i < 19; i++)
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < 100; j++)						// пауза
-//				__nop();
-
-//		}
-//		
-//		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-//		
-//		for(j = 0; j < 90; j++)						// пауза
-//				__nop();
-//		
-//		for(i = 20; i < 29; i++)
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < 96; j++)						// пауза
-//				__nop();
-
-//		}
-//		
-//		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-//		
-//		for(j = 0; j < 75; j++)						// пауза
-//				__nop();
-//		
-//		for(i = 30; i < TB; i++)
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < 96; j++)						// пауза
-//				__nop();
-
-//		}
-////		Interrupt_OUT2_GPIO_Port->BRR = Interrupt_OUT2_Pin;
-////		HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
-//		
-//		if(!UartBuffByte[0] && UartBuffByte[9] && !UartBuffByte[10] && UartBuffByte[19] && !UartBuffByte[20] && UartBuffByte[29] && !UartBuffByte[30] && UartBuffByte[39])
-//		{			
-//		SoftUart[0] = UartBuffByte[ 1] | UartBuffByte[ 2]<<1 | UartBuffByte[ 3]<<2 | UartBuffByte[ 4]<<3 | UartBuffByte[ 5]<<4 | UartBuffByte[ 6]<<5 | UartBuffByte[ 7]<<6 | UartBuffByte[ 8]<<7 ;
-//		SoftUart[1] = UartBuffByte[11] | UartBuffByte[12]<<1 | UartBuffByte[13]<<2 | UartBuffByte[14]<<3 | UartBuffByte[15]<<4 | UartBuffByte[16]<<5 | UartBuffByte[17]<<6 | UartBuffByte[18]<<7 ;
-//		SoftUart[2] = UartBuffByte[21] | UartBuffByte[22]<<1 | UartBuffByte[23]<<2 | UartBuffByte[24]<<3 | UartBuffByte[25]<<4 | UartBuffByte[26]<<5 | UartBuffByte[27]<<6 | UartBuffByte[28]<<7 ;
-//		SoftUart[3] = UartBuffByte[31] | UartBuffByte[32]<<1 | UartBuffByte[33]<<2 | UartBuffByte[34]<<3 | UartBuffByte[35]<<4 | UartBuffByte[36]<<5 | UartBuffByte[37]<<6 | UartBuffByte[38]<<7 ;
-//		
-//		if(SoftUart[0] == 0x12U)
-//		SETUP.hpt_name = (SoftUart[1] << 8) | SoftUart[2];			// проверить порядок байт
-//		SaveSetting(&SETUP);
-//		IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
-//		__enable_irq ();
-//		}
-//		else
-//		{
-//			__enable_irq ();
-//			HPT_Transmite(REQUEST);
-//		}
-//	
-	
-//	__enable_irq ();
 }
 
 void StartSUART(void)
@@ -279,30 +197,30 @@ void StartSUART(void)
 
 // сейчас передача идет старшим вперед databuff[0] - старший
 	// должна быть младшим вперед databuff[0] - младший
-	//uint16_t dataBuff(uint8_t data)
-	//{
-	//	uint16_t databin;
+uint16_t dataBuff(uint8_t data)
+{
+	uint16_t databin;
 		
 		// кольцевой сдвиг
-	//	for(uint8_t i = DATALEN-1; i > 0; i--)
-	//	{
-	//		databuff[i] = databuff[i-1];
-	//	}
+	for(uint8_t i = DATALEN-1; i > 0; i--)
+	{
+		databuff[i] = databuff[i-1];
+	}
 		// запись нового бита
-	//	databuff[0] = data;
+	databuff[0] = data;
 		
 		// восстановление числа
 		
-//		databin = databuff[0] | databuff[1]<<1 | databuff[2]<<2 | databuff[3]<<3 | databuff[4]<<4 | databuff[5]<<5 | databuff[6]<<6 | databuff[7]<<7 | databuff[8]<<8 | databuff[9]<<9 | databuff[10]<<10 | databuff[11]<<11 | databuff[12]<<12 | databuff[13]<<13 | databuff[14]<<14 | databuff[15]<<15 ; // младшим вперед
+		databin = databuff[0] | databuff[1]<<1 | databuff[2]<<2 | databuff[3]<<3 | databuff[4]<<4 | databuff[5]<<5 | databuff[6]<<6 | databuff[7]<<7 | databuff[8]<<8 | databuff[9]<<9 | databuff[10]<<10 | databuff[11]<<11 | databuff[12]<<12 | databuff[13]<<13 | databuff[14]<<14 | databuff[15]<<15 ; // младшим вперед
 	//	databin = databuff[15] | databuff[14]<<1 | databuff[13]<<2 | databuff[12]<<3 | databuff[11]<<4 | databuff[10]<<5 | databuff[9]<<6 | databuff[8]<<7 | databuff[7]<<8 | databuff[6]<<9 | databuff[5]<<10 | databuff[4]<<11 | databuff[3]<<12 | databuff[2]<<13 | databuff[1]<<14 | databuff[0]<<15 ; // младшим вперед
 		
 		
 		// сравнение массивов
-//		if(memcmp(&databuff, &alarm, sizeof(databuff)))
-//			blink(ALARM);
+		if(memcmp(&databuff, &alarm, sizeof(databuff)))
+			blink(ALARM);
 		
-	//	return databin;
-	//}
+	return databin;
+}
 	
 
 
@@ -357,8 +275,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(External_IN_GPIO_Port->IDR & External_IN_Pin)																	// прерывание по фронту
 				{
 					if(!IRQ_abort)
-//						HAL_LPTIM_Counter_Start_IT(&hlptim1,350);			//10 35000 кбод
-//						S_UART();
 							StartSUART();
 					
 					if(IRQ_abort)
@@ -367,11 +283,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 						HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET); // включение большого света
 					}
 					
-//					if(hpt_rept_type == ENABLE)
-//					{
-//						hpt_rept_cnt = 0;
-//						en_cnt = 1;
-//					}
+					if(hpt_rept_type == ENABLE)
+					{
+						hpt_rept_cnt = 0;
+						en_cnt = 1;
+					}
 					
 					temp = CAPLAMP_OUT1_GPIO_Port -> MODER;																				  //
 					temp &= ~(GPIO_MODER_MODE1 << 0);																								//	перенастройка выхода с таймера на GPIO
@@ -408,8 +324,6 @@ void HPT_Transmite(uint8_t type)
 {
 	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);							// отключение прерываний по входу НРТ
 	hpt_rept_type = type;
-	if(type == REQUEST)
-		HAL_ADC_Stop_DMA(&hadc);
 	hpt_rept_cnt = 0;
 	en_cnt = 1;
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);
@@ -433,6 +347,8 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	blink_trg = 0;
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 	HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
+	if(SUART.err_cnt >= 10)
+		blink(START);
 }
 
 	
@@ -443,7 +359,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 		SETUP.repeatnum = 1;
 		
 		SETUP.serailnum	= 0x00000000U;
-		SETUP.firmware	= 0x3117U;
+		SETUP.firmware	= 0x6197U;			// версия от 12.3.18-7
 		
 		SETUP.ratio = 5e-3f;
 		
@@ -486,44 +402,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
  // BR = 2.0
 SETUP.samplenum =  1600;
 		
-//		 // f =  984 , BR = 2.0
-//		SETUP.samplenum = 1600;
-//		SETUP.f1 = 984;
-//		SETUP.f2 = 966;
-//		SETUP.BR = 20;
-///*a1*/   SETUP.cf1s1[0] = 0.702541857155492;
-///*a2*/   SETUP.cf1s1[1] = 0.994534406218589;
-///*b1*/   SETUP.cf1s1[2] = 0.071590504732271;
-///*b2*/   SETUP.cf1s1[3] = 0.066341650450648;
-///*b3*/   SETUP.cf1s1[4] = 0.071590504732271;
-
-///*a1*/   SETUP.cf1s2[0] = 0.712765626378700;
-///*a2*/   SETUP.cf1s2[1] = 0.994545730434914;
-///*b1*/   SETUP.cf1s2[2] = 0.014814725949727;
-///*b2*/   SETUP.cf1s2[3] = 0.006985641330531;
-///*b3*/   SETUP.cf1s2[4] = 0.014814725949727;
-
-// // f =  966 , BR = 2.0
-///*a1*/   SETUP.cf2s1[0] = 0.635860005955117;
-///*a2*/   SETUP.cf2s1[1] = 0.994535004235001;
-///*b1*/   SETUP.cf2s1[2] = 0.069094363053546;
-///*b2*/   SETUP.cf2s1[3] = 0.059679724517278;
-///*b3*/   SETUP.cf2s1[4] = 0.069094363053546;
-
-///*a1*/   SETUP.cf2s2[0] = 0.646214193388075;
-///*a2*/   SETUP.cf2s2[1] = 0.994545132412054;
-///*b1*/   SETUP.cf2s2[2] = 0.014722092858333;
-///*b2*/   SETUP.cf2s2[3] = 0.005930783953626;
-///*b3*/   SETUP.cf2s2[4] = 0.014722092858333;
-
-// // flp = 2.00 , BR = 2.0
-///*a1*/   SETUP.cflp[0] = -0.996080699674494;
-///*a2*/   SETUP.cflp[1] = 0.000000000000000;
-///*b1*/   SETUP.cflp[2] = 0.001959650162753;
-///*b2*/   SETUP.cflp[3] = 0.001959650162753;
-///*b3*/   SETUP.cflp[4] = 0.000000000000000;
-
-		
+	
 
 	}
 	
@@ -755,60 +634,3 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 	
 	
-		
-//		for(j = 0; j < delay[br][0]; j++)						// пауза				задержка старт бита
-//				__nop();
-//	
-//		for(i = 0; i < 9; i++)											// первый байт
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < delay[br][1]; j++)					// пауза
-//				__nop();
-
-//		}
-//		
-//		UartBuffByte[9] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 1й байт 
-//		
-//		
-//		for(j = 0; j < delay[br][2]; j++)						// пауза				корректировка 
-//				__nop();
-//		
-//		for(i = 10; i < 19; i++)										// второй байт
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < delay[br][3]; j++)					// пауза
-//				__nop();
-
-//		}
-//		
-//		UartBuffByte[19] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 2й байт 
-//		
-//		
-//		for(j = 0; j < delay[br][4]; j++)						// пауза				корректировка
-//				__nop();
-//		
-//		for(i = 20; i < 29; i++)										// третий байт
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < delay[br][5]; j++)					// пауза
-//				__nop();
-
-//		}
-//		
-//		UartBuffByte[29] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// стоп бит 3й байт 
-//		
-//		for(j = 0; j < delay[br][6]; j++)						// пауза				корректировка
-//				__nop();
-//		
-//		for(i = 30; i < 40; i++)										// четвертый байт
-//		{
-//				UartBuffByte[i] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
-
-//			for(j = 0; j < delay[br][7]; j++)					// пауза
-//				__nop();
-
-//		}
-//		
