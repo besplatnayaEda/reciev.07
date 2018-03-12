@@ -122,9 +122,6 @@ int main(void)
 	
 
 
-//	HPT_Transmite(CONFIRM);
-
-
 
 //#ifdef DFS
 //	DefaultSettings();

@@ -142,16 +142,16 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
-          <Name>-U38FF71064B46373137251043 -O2287 -S0 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(0BC11477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8004 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC800 -FN2 -FF0STM32L0xx_16.FLM -FS08000000 -FL04000 -FP0($$Device:STM32L011D4$Flash\STM32L0xx_16.FLM) -FF1STM32L01_2x_EEPROM.FLM -FS18080000 -FL1200 -FP1($$Device:STM32L011D4$Flash\STM32L01_2x_EEPROM.FLM)</Name>
+          <Name>-U38FF71064B46373137251043 -O2287 -S0 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(0BC11477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8004 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO31 -FD20000000 -FC800 -FN2 -FF0STM32L0xx_16.FLM -FS08000000 -FL04000 -FP0($$Device:STM32L011D4$Flash\STM32L0xx_16.FLM) -FF1STM32L01_2x_EEPROM.FLM -FS18080000 -FL1200 -FP1($$Device:STM32L011D4$Flash\STM32L01_2x_EEPROM.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
       <Breakpoint>
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>161</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>134229400</Address>
+          <LineNumber>163</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134229606</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -160,12 +160,12 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>C:\Users\KAArtemev\Desktop\РџСЂРѕС€РёРІРєРё\РџСЂРёРµРјРЅРёРє\reciev.07\Src\match_dsp.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\reciev\../Src/match_dsp.c\161</Expression>
+          <Expression>\\reciev\../Src/match_dsp.c\163</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>280</LineNumber>
+          <LineNumber>135</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -181,7 +181,7 @@
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>291</LineNumber>
+          <LineNumber>187</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -197,7 +197,7 @@
         <Bp>
           <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>292</LineNumber>
+          <LineNumber>198</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -213,7 +213,7 @@
         <Bp>
           <Number>4</Number>
           <Type>0</Type>
-          <LineNumber>367</LineNumber>
+          <LineNumber>199</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -229,7 +229,7 @@
         <Bp>
           <Number>5</Number>
           <Type>0</Type>
-          <LineNumber>374</LineNumber>
+          <LineNumber>274</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -245,7 +245,7 @@
         <Bp>
           <Number>6</Number>
           <Type>0</Type>
-          <LineNumber>382</LineNumber>
+          <LineNumber>279</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -261,7 +261,7 @@
         <Bp>
           <Number>7</Number>
           <Type>0</Type>
-          <LineNumber>539</LineNumber>
+          <LineNumber>287</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -277,39 +277,7 @@
         <Bp>
           <Number>8</Number>
           <Type>0</Type>
-          <LineNumber>546</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>9</Number>
-          <Type>0</Type>
-          <LineNumber>547</LineNumber>
-          <EnabledFlag>0</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Src\match_dsp.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>10</Number>
-          <Type>0</Type>
-          <LineNumber>554</LineNumber>
+          <LineNumber>422</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -332,7 +300,7 @@
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>SETUP,0x0A</ItemText>
+          <ItemText>SETUP,0x10</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
