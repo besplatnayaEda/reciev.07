@@ -108,6 +108,9 @@ typedef struct SoftUART_15Baud	{
 	uint8_t err_cnt;
 	uint8_t rx_buff[30];
 	uint8_t	rx_data[3];
+	uint8_t rx_data_cnt;
+	uint16_t	rx_tmp;
+
 
 }SoftUART_15Baud_t, *pSoftUART_15Baud_t;
 

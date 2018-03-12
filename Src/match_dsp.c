@@ -163,12 +163,23 @@ void S_UART(void)
 		SUART.rx_data[1] = SUART.rx_buff[11] | SUART.rx_buff[12]<<1 | SUART.rx_buff[13]<<2 | SUART.rx_buff[14]<<3 | SUART.rx_buff[15]<<4 | SUART.rx_buff[16]<<5 | SUART.rx_buff[17]<<6 | SUART.rx_buff[18]<<7 ;
 		SUART.rx_data[2] = SUART.rx_buff[21] | SUART.rx_buff[22]<<1 | SUART.rx_buff[23]<<2 | SUART.rx_buff[24]<<3 | SUART.rx_buff[25]<<4 | SUART.rx_buff[26]<<5 | SUART.rx_buff[27]<<6 | SUART.rx_buff[28]<<7 ;
 		
-		if(SETUP.hpt_name != ((SUART.rx_data[1] << 8) | (SUART.rx_data[2]))){
-			SETUP.hpt_name = (SUART.rx_data[1] << 8) | SUART.rx_data[2];			
-			SaveSetting(&SETUP);
-			blink(OK_SET);
-			SUART.err_cnt = 0;
-		}
+			switch(SUART.rx_data_cnt){
+				case 0:
+					SUART.rx_tmp = (SUART.rx_data[1] << 8) | (SUART.rx_data[2]);
+					SUART.rx_data_cnt++;
+					HPT_Transmite(REQUEST);
+					break;
+				case 1:
+					if(SUART.rx_tmp == ((SUART.rx_data[1] << 8) | (SUART.rx_data[2]))){
+						SETUP.hpt_name = (SUART.rx_data[1] << 8) | SUART.rx_data[2];			
+						SaveSetting(&SETUP);
+						blink(OK_SET);
+						SUART.err_cnt = 0;
+						SUART.rx_data_cnt = 0;
+					}
+					break;
+			}
+		
 		}
 		else
 		{
@@ -189,6 +200,7 @@ void StartSUART(void)
 	SUART.tim_en = 1;
 	SUART.tim_cnt = 0;
 	SUART.rx_cnt = 0;
+	
 	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
 }
 
