@@ -414,7 +414,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
  // BR = 2.0
 SETUP.samplenum =  1600;
 		
-	
+	SaveSetting(&SETUP);
 
 	}
 	
