@@ -8,19 +8,26 @@
 
 
 
+// массив для промежуточных значений отфильтрованного сигнала
+float history11[] = {0,0};
+float history12[] = {0,0};
+float history21[] = {0,0};
+float history22[] = {0,0};
+float historyl[]  = {0,0};
 
-float history11[] = {0,0},history12[] = {0,0},history21[] = {0,0},history22[] = {0,0},historyl[] = {0,0};
+#define DATALEN	16	// размер буфера
+uint8_t databuff[DATALEN];	//кольцевой буфер
 
-#define DATALEN	16
+// инверсия слова
 #define INVERT_HALFWORD(a)   ((a&1)<<15) | ((a&2)<<13) | ((a&4)<<11) | ((a&8)<<9) | ((a&16)<<7) | ((a&32)<<5) | ((a&64)<<3) | ((a&128)<<1) | ((a&256)>>1) | ((a&512)>>3) | ((a&1024)>>5) | ((a&2048)>>7) | ((a&4096)>>9) | ((a&8192)>>11) | ((a&16384)>>13) | ((a&32768)>>15)
 
 
 
-
+// массив кольцевого буфера для аварийного соощения
 uint8_t alarm[] = {1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0};
 													//			a1					a2					b0					b1						b2
 
-
+// массивы для таймера управления фонарем
 const uint32_t pdat0[]		= {0,125,125,125,0};	// старт
 const uint32_t pdat2[]		= {0,250,125,250,0}; // прошивка
 
@@ -28,24 +35,22 @@ const uint32_t pdat2[]		= {0,250,125,250,0}; // прошивка
 const uint32_t pdat[]			= {125,125,125,125,125,0,250,0,250,0,250,0,125,125,125,125,125,250,0,250,0,250,0,125,125,125,125,125,250,0,250,0,250,0,125,125,125,125,125,0,0};	// авария
 const uint32_t pdat1[]		= {250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,250,250,250,0,250,0,250,0,250,0,0};													// персональный
 
-
-_Bool blink_end = 0;
-	
+// переменные для моргания фонарем
+_Bool blink_end = 0;			// окончание моргания
 uint8_t blink_type = 0;		// тип моргания
-uint8_t blink_8sec;				// количество 8-ми секундных ожиданий
+uint8_t blink_8sec;				// количество 8-ми секундных повторов
 uint16_t blink_ext;				// внешний импульс
-uint8_t blink_trg;
+uint8_t blink_trg;				// триггер моргания
 	
 extern DMA_HandleTypeDef hdma_tim2_ch1;
 extern uint32_t buff1;
 	
-	
-uint8_t databuff[DATALEN];
 
-	uint8_t hpt_rept_type = ENABLE; // тип запроса НРТ
-	uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
-	uint8_t IRQ_abort = 1;		// 0 - ждем уарт, 1 - ждем моргание
-	uint8_t en_cnt = 0;				// запуск счета 1 - запущен, 0 - остановлен
+
+uint8_t hpt_rept_type = ENABLE; // тип запроса НРТ
+uint16_t hpt_rept_cnt;		// счетчик для ответа НРТ
+uint8_t IRQ_abort = 1;		// 0 - ждем уарт, 1 - ждем моргание
+uint8_t en_cnt = 0;				// запуск счета 1 - запущен, 0 - остановлен
 
 
 SoftUART_15Baud_t SUART;
@@ -60,12 +65,14 @@ extern UART_HandleTypeDef huart2;
 // режим моргания 
 void blink(char mode)
 {
+	//переключение типа выхода 
 	uint32_t temp;
 	temp = CAPLAMP_OUT1_GPIO_Port->MODER;
 	temp &= ~(GPIO_MODER_MODE1 << 0);
 	temp |= ((GPIO_MODE_AF_PP & ((uint32_t)0x00000003U)) << 2);
 	CAPLAMP_OUT1_GPIO_Port->MODER = temp;
 	
+	// выбор типа моргания
 	switch(mode)
 	{
 		case START:
@@ -99,7 +106,7 @@ void blink(char mode)
 
 }
 
-
+// каноническая форма реализации звена второго порядка 
 float IIR_SOS(float in, float *coef, float *his)
 {
 		float out;
@@ -116,54 +123,58 @@ float IIR_SOS(float in, float *coef, float *his)
 		hist1 = *hist1_ptr;
     hist2 = *hist2_ptr;
 	
-		out = in  - hist1 * (*coef_ptr++);
-		new_his = out - hist2 * (*coef_ptr++);
+	// рекурсивная часть
+		out = in  - hist1 * (*coef_ptr++);				// а1
+		new_his = out - hist2 * (*coef_ptr++);		// а2
 	
-		out = new_his * (*coef_ptr++);
-		out = out + hist1 * (*coef_ptr++);
-    out = out + hist2 * (*coef_ptr++);
+	// нерекурсивня часть
+		out = new_his * (*coef_ptr++);						// b0
+		out = out + hist1 * (*coef_ptr++);				// b1
+    out = out + hist2 * (*coef_ptr++);				// b2
 
     *hist2_ptr = *hist1_ptr;
     *hist1_ptr = new_his;
 
     return out;
 }
+
+// обработчик програмного UART
 void S_UART(void)
 {
-	if(SUART.rx_cnt == 0)
+	if(SUART.rx_cnt == 0)		// прием первого бита
 	{
 
-		if(SUART.tim_cnt == 105)
+		if(SUART.tim_cnt == 105)			// проверка состояния через пол бита
 		{
-			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);			// запись состояния порта
 			SUART.rx_cnt++;
 			SUART.tim_cnt = 0;
 		}
 	}
-	else if(SUART.rx_cnt < 30)
+	else if(SUART.rx_cnt < 30)		// прием оставшихся бит
 	{
-		if(SUART.tim_cnt == 210)
+		if(SUART.tim_cnt == 210)		// чтение бита через 65,5 мс
 		{
-			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);
+			SUART.rx_buff[SUART.rx_cnt] = !(External_IN_GPIO_Port->IDR & External_IN_Pin);	// запись состояния бита
 			SUART.rx_cnt++;
 			SUART.tim_cnt = 0;
 		}
 	}
-	else if(SUART.rx_cnt == 30)
+	else if(SUART.rx_cnt == 30)		// остановка если приняты все биты
 	{
 			IRQ_abort = 1;		// поменять на 1, убрать из майна, вернуть запрос ENABLE
 			SUART.tim_en = 0;
 			SUART.tim_cnt = 0;
 			SUART.rx_cnt = 0;
-			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+			HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);			// включение прерываний
 
-		if(!SUART.rx_buff[0] && SUART.rx_buff[9] && !SUART.rx_buff[10] && SUART.rx_buff[19] && !SUART.rx_buff[20] && SUART.rx_buff[29])
+		if(!SUART.rx_buff[0] && SUART.rx_buff[9] && !SUART.rx_buff[10] && SUART.rx_buff[19] && !SUART.rx_buff[20] && SUART.rx_buff[29])		// разбор байт, если стартовые и стоповые биты совпадают
 		{			
 		SUART.rx_data[0] = SUART.rx_buff[ 1] | SUART.rx_buff[ 2]<<1 | SUART.rx_buff[ 3]<<2 | SUART.rx_buff[ 4]<<3 | SUART.rx_buff[ 5]<<4 | SUART.rx_buff[ 6]<<5 | SUART.rx_buff[ 7]<<6 | SUART.rx_buff[ 8]<<7 ;
 		SUART.rx_data[1] = SUART.rx_buff[11] | SUART.rx_buff[12]<<1 | SUART.rx_buff[13]<<2 | SUART.rx_buff[14]<<3 | SUART.rx_buff[15]<<4 | SUART.rx_buff[16]<<5 | SUART.rx_buff[17]<<6 | SUART.rx_buff[18]<<7 ;
 		SUART.rx_data[2] = SUART.rx_buff[21] | SUART.rx_buff[22]<<1 | SUART.rx_buff[23]<<2 | SUART.rx_buff[24]<<3 | SUART.rx_buff[25]<<4 | SUART.rx_buff[26]<<5 | SUART.rx_buff[27]<<6 | SUART.rx_buff[28]<<7 ;
 		
-			switch(SUART.rx_data_cnt){
+			switch(SUART.rx_data_cnt){ // повторный запрос
 				case 0:
 					SUART.rx_tmp = (SUART.rx_data[1] << 8) | (SUART.rx_data[2]);
 					SUART.rx_data_cnt++;
@@ -181,7 +192,7 @@ void S_UART(void)
 			}
 		
 		}
-		else
+		else									// запуск повторного запроса, если пришел неправильный ответ, но не больше 10ти
 		{
 			SUART.err_cnt++;
 			if(SUART.err_cnt < 10)
@@ -195,13 +206,14 @@ void S_UART(void)
 	
 }
 
+// запуск програмного UART
 void StartSUART(void)
 {
-	SUART.tim_en = 1;
-	SUART.tim_cnt = 0;
-	SUART.rx_cnt = 0;
+	SUART.tim_en = 1;			// включение таймера
+	SUART.tim_cnt = 0;		// сброс счетчика
+	SUART.rx_cnt = 0;			// сброс счетчика бит
 	
-	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
+	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);		// выключение прерываний
 }
 
 
@@ -235,17 +247,17 @@ uint16_t dataBuff(uint8_t data)
 }
 	
 
-
+// сохранение структуры с настройками
 void SaveSetting(SettingParametrs_t *Settings)
 {
 	uint32_t *flash_addr = (uint32_t *)ADR_START;
   uint32_t *settings_addr = (uint32_t *)Settings;
 	
 	uint32_t flash_addr_e = ADR_START;
-  HAL_FLASHEx_DATAEEPROM_Unlock();
-	HAL_FLASHEx_DATAEEPROM_Erase(flash_addr_e);
+  HAL_FLASHEx_DATAEEPROM_Unlock();			// разрешение записи EEPROM
+	HAL_FLASHEx_DATAEEPROM_Erase(flash_addr_e);		
 	
-	for (uint8_t i = 0; i < sizeof(SETUP); i+=4) {
+	for (uint8_t i = 0; i < sizeof(SETUP); i+=4) {	// очистка EEPROM 
     HAL_FLASHEx_DATAEEPROM_Erase(flash_addr_e);
     flash_addr_e +=4;
   }
@@ -253,17 +265,19 @@ void SaveSetting(SettingParametrs_t *Settings)
 
 
 	
-	for (uint32_t i = 0; i < SETTING_WORDS; i++) {
+	for (uint32_t i = 0; i < SETTING_WORDS; i++) {// запись структуры по словам 
     HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)flash_addr, *(uint32_t *)settings_addr);
     flash_addr++;
     settings_addr++;
   }
 	
 	
-	HAL_FLASHEx_DATAEEPROM_Lock();
+	HAL_FLASHEx_DATAEEPROM_Lock();		// запрет записи EEPROM
 	
 }
 
+
+// чтение настроек из памяти
 void LoadSetting(SettingParametrs_t *Settings)
 {
 	
@@ -275,27 +289,27 @@ void LoadSetting(SettingParametrs_t *Settings)
 }
 
 
-
+// обработчик внешних прерываний 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	{
 		uint32_t temp;
 		switch(GPIO_Pin)
 		{
-			case External_IN_Pin:							// ?????? ??????
-				if(!blink_trg){
+			case External_IN_Pin:							// обработка прерываний по входу НРТ
+				if(!blink_trg){									// обработка когда нет моргания
 								
 				if(External_IN_GPIO_Port->IDR & External_IN_Pin)																	// прерывание по фронту
 				{
-					if(!IRQ_abort)
+					if(!IRQ_abort)								// запуск програмного уарта
 							StartSUART();
 					
-					if(IRQ_abort)
+					if(IRQ_abort)									// трансляция сигналов с НРТ
 					{
 						blink_ext = 0;
 						HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET); // включение большого света
 					}
 					
-					if(hpt_rept_type == ENABLE)
+					if(hpt_rept_type == ENABLE)		// запуск таймера на включение програмного UART при включении 
 					{
 						hpt_rept_cnt = 0;
 						en_cnt = 1;
@@ -331,7 +345,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		}
 	}
 	
-
+// Отправка сигнала для НРТ
 void HPT_Transmite(uint8_t type)
 {
 	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);							// отключение прерываний по входу НРТ
@@ -341,6 +355,8 @@ void HPT_Transmite(uint8_t type)
 	HAL_GPIO_WritePin(HPT_Answer_OUT_GPIO_Port,HPT_Answer_OUT_Pin, GPIO_PIN_SET);
 	
 }
+
+// вы ключени емалого света 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM21)
@@ -353,17 +369,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 }
 
+// включение большого света при остановки моргания
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
 	blink_end = 1;
 	blink_trg = 0;
 	HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
 	HAL_TIM_PWM_Stop_DMA(&htim2,TIM_CHANNEL_2);
-	if(SUART.err_cnt >= 10)
+	if(SUART.err_cnt >= 10)				// непрерывное моргание, если нет правильного ответа от нрт
 		blink(START);
 }
 
-	
+	// сброс на заводские настройки
 	void DefaultSettings(void)
 	{
 		SETUP.hpt_name = 61680;	// 1111 0000 1111 0000 43690;			// 1010 1010 1010 1010
@@ -417,7 +434,7 @@ SETUP.samplenum =  1600;
 	SaveSetting(&SETUP);
 
 	}
-	
+	// обработка команд по UART
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		

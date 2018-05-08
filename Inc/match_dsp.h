@@ -5,28 +5,24 @@
 #include "dma.h"
 #include "tim.h"
 
-#define NAME 206
-#define START			0
-#define ALARM 		1
-#define PERSONAL	2
-#define OK_SET		3
+// режим моргания фонаря
+#define START			0			// стартовый 
+#define ALARM 		1			// авария
+#define PERSONAL	2			// персональный вызов
+#define OK_SET		3			// настройка 
 
-#define RX_READY	0
-#define RX_BUSY		1
-
-
-
+// тип запроса для НРТ метки
 #define CONFIRM		0		//	195 ms
 #define REQUEST		1		//	395 ms
 #define	TEST			2		//	590 ms
 #define ENABLE		3		// включение HPT
 
-#define TXBUFF 4
-
+// стартовый адрес для сохранения
 #define ADR_START 0x08080000
 
-#define FLASH_WORD_SIZE 4UL
+#define FLASH_WORD_SIZE 4UL		// размер сохраняемого слова
 
+// расчет размера структуры
 #define SETTING_RECORD_SIZE ((sizeof(SettingParametrs_t) + FLASH_WORD_SIZE - 1) & (~(FLASH_WORD_SIZE - 1)))
 // размер структуры настроек в словах
 #define SETTING_WORDS (SETTING_RECORD_SIZE / FLASH_WORD_SIZE)
@@ -78,8 +74,10 @@ typedef enum {	UNDEFINED = -1,
 			 } Cmd_Type;
 
 
+// тип принимаемых данных
 typedef enum {UART2_RECV_CMD, UART2_RECV_VALUE} UART2Recv_t;
 
+// структура с настройками
 typedef struct SettingParametrs {
 
 	uint16_t hpt_name;			// номер метки
@@ -101,35 +99,36 @@ typedef struct SettingParametrs {
 	
 } SettingParametrs_t, *pSettingParametrs_t;
 
+// програмный uart
 typedef struct SoftUART_15Baud	{
-	uint8_t	tim_en;
-	uint8_t	tim_cnt;
-	uint8_t	rx_cnt;
-	uint8_t err_cnt;
-	uint8_t rx_buff[30];
-	uint8_t	rx_data[3];
-	uint8_t rx_data_cnt;
-	uint16_t	rx_tmp;
+	uint8_t	tim_en;						// запуск таймера
+	uint8_t	tim_cnt;					// счетчик
+	uint8_t	rx_cnt;						// счетчик принятых бит
+	uint8_t err_cnt;					// счетчик ошибочных байт
+	uint8_t rx_buff[30];			// приемный буфер для бит
+	uint8_t	rx_data[3];				// приемный буфер для байт
+	uint8_t rx_data_cnt;		  // счетчик принятых байт
+	uint16_t rx_tmp;					// временный буфер для данных
 
 
 }SoftUART_15Baud_t, *pSoftUART_15Baud_t;
 
-float IIR_SOS(float in, float *coef, float *his);
+
+float IIR_SOS(float in, float *coef, float *his);													// рекурсивный фильтр второго порядка
 
 
-void blink(char mode);
-void SetCoefficiens(uint16_t freq1, uint16_t freq2, uint16_t boudrate);
-void DefaultSettings(void);
+void blink(char mode);				// запуск моргания
+void DefaultSettings(void);		// сброс настроек на заводские 
 
-void SaveSetting(SettingParametrs_t *Settings);
-void LoadSetting(SettingParametrs_t *Settings);
+void SaveSetting(SettingParametrs_t *Settings);		// сохранение настроек
+void LoadSetting(SettingParametrs_t *Settings);		// загрузка настроек
 
 void HPT_Transmite(uint8_t type);			// ответ HPT метке
-void S_UART(void);
+void S_UART(void);										// обработчик програмного UART
 
-void StartSUART(void);
+void StartSUART(void);								// запуск програмного UART
 
 
-uint16_t dataBuff(uint8_t data);
+uint16_t dataBuff(uint8_t data);			// кольцевой буфер
 
 

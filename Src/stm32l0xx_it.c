@@ -41,63 +41,44 @@
 #include "adc.h"
 #include <string.h>
 
-#define	N	16
+#define	N	16		// число принимаемых бит
 
 // для 8 битного номера
 
 
-#define ALERT_H 43690	
-#define ALERT_L 21845
-#define TEST_H  65280
-#define TEST_L	255
-#define REBOOT	0
+#define ALERT_H 43690			// аварийный номер
+#define ALERT_L 21845			// аварийный номер
+#define TEST_H  65280			// тестовый номер
+#define TEST_L	255				// тестовый номер
 
-extern uint32_t buff1;	// буфер
 
+extern uint32_t buff1;	// буфер ацп
 static float retf11,retf12,retf21,retf22,retfl, buff0, buffl0;	// фильтры
+static uint8_t numbit = 0; // счетчик бит
 
+static uint16_t j;				// счетчик выборок
+static uint16_t bin;			// буфер детектируемого номера
 
-static uint8_t numbit = 0;
-
-static uint16_t j, bin;//, binx;
-extern uint16_t name;
-
-
-uint16_t bit_1 = 0;
-uint16_t bit_0 = 0;
-uint16_t bit_n = 0;
-uint16_t binn;
-
+// обработка бит
+uint16_t bit_1 = 0;		// количество выборок на '1'
+uint16_t bit_0 = 0;   // количество выборок на '0'
+uint16_t bit_n = 0;		// количество выборок на сигал в неопределенной зоне
+uint16_t binn;				// детектированый номер
+_Bool det = 0;				// флаг начала детектирования
+_Bool numb[N];				// массив детектируемого номера в битах
+static uint8_t  nop = 0;	// число пропущеных бит
+extern	uint8_t databuff[];
 extern	uint16_t hpt_rept_cnt;
 extern	uint8_t hpt_rept;
 extern	uint8_t hpt_rept_type;
 extern	uint8_t en_cnt;
 extern 	uint8_t IRQ_abort;
 
-
-
-extern	uint8_t databuff[];
-
-
+uint16_t blink_cnt = 0;			// счетчик для повтора моргания
 extern uint8_t blink_type;
 extern uint16_t blink_ext;
-uint16_t blink_cnt = 0;
 extern uint8_t blink_8sec;
 extern uint8_t blink_trg;
-
-
-
-
-
-_Bool frame = 0;
-_Bool pass = 0;
-_Bool det = 0;
-_Bool numb[N];
-_Bool numbn[N];
-
-
-static uint8_t  nop = 0;
-
 
 extern float history11[], history12[], history21[], history22[], historyl[];
 extern SettingParametrs_t SETUP;
@@ -231,7 +212,7 @@ void TIM2_IRQHandler(void)
 void TIM21_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM21_IRQn 0 */
-	
+	// повтор моргания
 //if(blink_cnt>0)
 //		blink_cnt++;
 //	if((blink_cnt>25600))
@@ -248,7 +229,7 @@ void TIM21_IRQHandler(void)
 //			blink_cnt = 0;
 //		}
 //	}
-	
+	// включение большого света после внешних морганий
 	if(!blink_trg)
 	{
 		if((blink_ext < 3200))
@@ -258,7 +239,7 @@ void TIM21_IRQHandler(void)
 	}
 	
 
-	if(en_cnt)
+	if(en_cnt)		// обработчик команд дл запроса НРТ
 	{
 		switch(hpt_rept_cnt)
 		{
@@ -305,75 +286,70 @@ void TIM21_IRQHandler(void)
 	}
 	
 	
-	
-//	if(!blink_trg)
-//	{
-//		if((blink_ext < 3200))
-//			blink_ext++;
-//		if(blink_ext == 3200)
-//			HAL_GPIO_WritePin(Interrupt_OUT2_GPIO_Port,Interrupt_OUT2_Pin, GPIO_PIN_RESET);
-//	}
-	
 
-	buff0 = 3*((float)buff1)/65520; //65535;							// ?????? ? ?????? 
+	buff0 = 3*((float)buff1)/65520; //65535;							// преобразование значений ацп в вольты
 	
 	
 	// cheby 2
-
+	// фильтрация частоты 1 
 	retf11 = IIR_SOS(buff0,SETUP.cf1s1,history11);			//f1
 		retf12 = IIR_SOS(retf11,SETUP.cf1s2,history12);
 	
+	// фильтрация частоты 2
 	retf21 = IIR_SOS(buff0,SETUP.cf2s1,history21);			//f2
 		retf22 = IIR_SOS(retf21,SETUP.cf2s2,history22);
 	
+	// разность сигналов между f1 и f2
 		buffl0 = fabsf(retf12)-fabsf(retf22);
+	
+	// фильтрация фнч
 		retfl  = IIR_SOS(buffl0,SETUP.cflp,historyl);
 	
 
-		switch(CMD)
+		switch(CMD)		// передача данных по uart
 		{
-			case START_DTR_FLP:
+			case START_DTR_FLP:		// выход фнч
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retfl,sizeof(retfl));
 			break;
-			case START_DTR_F1:
+			case START_DTR_F1:		// выход f1
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retf12,sizeof(retf12));
 			break;
-			case START_DTR_F2:
+			case START_DTR_F2: 		// выход f2
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&retf22,sizeof(retf22));
 			break;
-			case START_DTR_IN:
+			case START_DTR_IN:		// вход ацп
 				HAL_UART_Transmit_DMA(&huart2,(uint8_t *)&buff0,sizeof(buff0));
 			break;
 			default:
 				break;
 		}
 
-		
-	if(!det)
+		// обработчик детектора
+	if(!det) // 
   {
-		if ((retfl >= SETUP.ratio)||(retfl <= -SETUP.ratio))
+		if ((retfl >= SETUP.ratio)||(retfl <= -SETUP.ratio)) // определение превышения порога
 			{
-				j=0;
-        det=1;
+				j=0;			// начало отсчета выборок 
+        det=1;		// выставление флага детектирования
       }
   }
   else
 	{
 		if(j < SETUP.samplenum)
     {
-			if(retfl >= SETUP.ratio)
+			if(retfl >= SETUP.ratio)		// накопление выборок '1'
 				bit_1++;
-			if(retfl <= -SETUP.ratio)
+			if(retfl <= -SETUP.ratio)		// накопление выборок '0'
 				bit_0++;
-			if((retfl < SETUP.ratio)&&(retfl > -SETUP.ratio))
+			if((retfl < SETUP.ratio)&&(retfl > -SETUP.ratio))	// накопление выборок неопределенного состояния
 				bit_n++;
 			
     }
-    if(j == SETUP.samplenum)
+    if(j == SETUP.samplenum)			// при достижении киличества выборок на один бит
 		{
 			if(numbit < N)
 			{	
-				if((bit_1 > bit_0)&&(bit_1 > bit_n)&&(bit_1 > (SETUP.samplenum/2)))
+				if((bit_1 > bit_0)&&(bit_1 > bit_n)&&(bit_1 > (SETUP.samplenum/2)))		// приняте решения что принята '1'
 					{
 						bin = bin<<1;
 						bin = bin|1;
@@ -381,7 +357,7 @@ void TIM21_IRQHandler(void)
 					//	numb[numbit] = 1;
 						numbit++;
 					}
-				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))
+				if((bit_0 > bit_1)&&(bit_0 > bit_n)&&(bit_0 > (SETUP.samplenum/2)))		// приняте решения что принят '0'
 					{
 						bin = bin<<1;
 						bin = bin|0;
@@ -389,7 +365,7 @@ void TIM21_IRQHandler(void)
 					//	numb[numbit] = 0;
 						numbit++;
 					}
-				if((bit_n > bit_0)&&(bit_n > bit_1))
+				if((bit_n > bit_0)&&(bit_n > bit_1))		// приняте решения что пропущен бит
 					{
 						nop++;
 						if((nop <= 0)&&(bit_n > (SETUP.samplenum/2)))
@@ -400,7 +376,7 @@ void TIM21_IRQHandler(void)
 						//		binx = dataBuff(0);
 								numbit++;
 							}
-						else
+						else		// сброс приема
 							{
 								bit_1 = 0;
 								bit_0 = 0;
@@ -415,7 +391,7 @@ void TIM21_IRQHandler(void)
 					}
 			
 			}
-			
+			// сброс накопления после каждого бита
 			bit_1 = 0;
 			bit_0 = 0;
 			bit_n = 0;
@@ -425,31 +401,31 @@ void TIM21_IRQHandler(void)
   }
   j++;
 	
-	if( numbit == N )
+	if( numbit == N )			// если приняты все биты
 	{
 		
 		binn = bin;
 	
-		if(bin == SETUP.hpt_name)
+		if(bin == SETUP.hpt_name)			// персональное моргание
 		{
 			blink_cnt = 1;
 			blink(PERSONAL);
 		}
-		if((bin == ALERT_H)||(bin == ALERT_L))
+		if((bin == ALERT_H)||(bin == ALERT_L))			// аварийное моргание
 		{
 			blink_cnt = 1;
 			blink(ALARM);
 		}
-		if((bin == TEST_H)||(bin == TEST_L))
+		if((bin == TEST_H)||(bin == TEST_L))				// тестовый ответ НРТ
 		{
 			HPT_Transmite(TEST);
 		}
-		/*if(bin == REBOOT)
-			SCB->AIRCR = 0x05FA0004;*/
+
 		
+		// сброс флогов
 		det=0;
 		bin=0;
-		numbit = 0;
+		numbit = 0;		
 	}
   /* USER CODE END TIM21_IRQn 0 */
   HAL_TIM_IRQHandler(&htim21);
